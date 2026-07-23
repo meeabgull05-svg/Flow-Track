@@ -1,0 +1,6 @@
+{
+  "name": "FlowTrack",
+  "description": "Task Management & Time Tracking SaaS app with live stopwatch and 1-year productivity history analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
