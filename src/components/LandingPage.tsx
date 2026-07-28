@@ -24,7 +24,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight">
           Master Your Time. <br />
-          <span className="bg-gradient-to-r from-indigo-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">
+          <span className="text-indigo-400">
             Track 1-Year Productivity.
           </span>
         </h1>

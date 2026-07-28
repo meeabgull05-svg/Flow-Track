@@ -50,23 +50,23 @@ export const AiInsightsModal: React.FC<AiInsightsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-gradient-to-r from-purple-950/40 via-slate-900 to-indigo-950/40">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-xl text-white shadow-md">
+            <div className="p-2 bg-[#635BFF] rounded-xl text-white shadow-xs">
               <Sparkles className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">FlowTrack AI Productivity Assistant</h2>
-              <p className="text-xs text-slate-400">Generate task breakdowns & 1-year productivity summaries</p>
+              <h2 className="text-lg font-bold text-slate-900">FlowTrack AI Productivity Assistant</h2>
+              <p className="text-xs text-slate-500">Generate task breakdowns & 1-year productivity summaries</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -79,34 +79,34 @@ export const AiInsightsModal: React.FC<AiInsightsModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <button
               onClick={() => handleGenerateInsight('summary')}
-              className="flex items-center gap-2 p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition-all group"
+              className="flex items-center gap-2 p-3 bg-slate-50 hover:bg-purple-50/80 border border-slate-200/80 hover:border-purple-200 rounded-2xl text-left transition-all group"
             >
-              <Bot className="w-4 h-4 text-purple-400 shrink-0" />
+              <Bot className="w-4 h-4 text-[#635BFF] shrink-0" />
               <div>
-                <div className="text-xs font-bold text-white group-hover:text-purple-300">Daily Summary</div>
-                <div className="text-[10px] text-slate-400">Analyze logged hours</div>
+                <div className="text-xs font-bold text-slate-900 group-hover:text-[#635BFF]">Daily Summary</div>
+                <div className="text-[10px] text-slate-500">Analyze logged hours</div>
               </div>
             </button>
 
             <button
               onClick={() => handleGenerateInsight('breakdown')}
-              className="flex items-center gap-2 p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition-all group"
+              className="flex items-center gap-2 p-3 bg-slate-50 hover:bg-indigo-50/80 border border-slate-200/80 hover:border-indigo-200 rounded-2xl text-left transition-all group"
             >
-              <ListPlus className="w-4 h-4 text-indigo-400 shrink-0" />
+              <ListPlus className="w-4 h-4 text-indigo-600 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-white group-hover:text-indigo-300">Task Breakdown</div>
-                <div className="text-[10px] text-slate-400">Subtask roadmap</div>
+                <div className="text-xs font-bold text-slate-900 group-hover:text-indigo-600">Task Breakdown</div>
+                <div className="text-[10px] text-slate-500">Subtask roadmap</div>
               </div>
             </button>
 
             <button
               onClick={() => handleGenerateInsight('optimization')}
-              className="flex items-center gap-2 p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition-all group"
+              className="flex items-center gap-2 p-3 bg-slate-50 hover:bg-amber-50/80 border border-slate-200/80 hover:border-amber-200 rounded-2xl text-left transition-all group"
             >
-              <Lightbulb className="w-4 h-4 text-amber-400 shrink-0" />
+              <Lightbulb className="w-4 h-4 text-amber-600 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-white group-hover:text-amber-300">Time Tips</div>
-                <div className="text-[10px] text-slate-400">Optimize schedule</div>
+                <div className="text-xs font-bold text-slate-900 group-hover:text-amber-600">Time Tips</div>
+                <div className="text-[10px] text-slate-500">Optimize schedule</div>
               </div>
             </button>
           </div>
@@ -118,11 +118,11 @@ export const AiInsightsModal: React.FC<AiInsightsModalProps> = ({
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Or enter a specific task title to decompose..."
-              className="flex-1 px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+              className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#635BFF] focus:bg-white"
             />
             <button
               onClick={() => handleGenerateInsight('breakdown')}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all"
+              className="px-4 py-2.5 bg-[#635BFF] hover:bg-[#5249ea] text-white rounded-xl text-xs font-bold transition-all"
             >
               Breakdown
             </button>
@@ -130,14 +130,14 @@ export const AiInsightsModal: React.FC<AiInsightsModalProps> = ({
 
           {/* Output Display */}
           {loading && (
-            <div className="p-8 text-center space-y-2 bg-slate-950/60 rounded-xl border border-slate-800">
-              <Sparkles className="w-6 h-6 text-purple-400 animate-spin mx-auto" />
-              <p className="text-xs text-slate-300 font-medium">Analyzing tasks & generating AI roadmap...</p>
+            <div className="p-8 text-center space-y-2 bg-slate-50 rounded-2xl border border-slate-200">
+              <Sparkles className="w-6 h-6 text-[#635BFF] animate-spin mx-auto" />
+              <p className="text-xs text-slate-600 font-medium">Analyzing tasks & generating AI roadmap...</p>
             </div>
           )}
 
           {aiResult && !loading && (
-            <div className="p-4 bg-slate-950 border border-purple-500/30 rounded-xl text-xs text-slate-200 whitespace-pre-wrap leading-relaxed shadow-inner">
+            <div className="p-4 bg-purple-50/50 border border-purple-200/80 rounded-2xl text-xs text-slate-800 whitespace-pre-wrap leading-relaxed">
               {aiResult}
             </div>
           )}

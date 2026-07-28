@@ -191,8 +191,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Bottom Section: Pro Upgrade Card & Version Footer */}
         <div className="p-3 border-t border-slate-100 space-y-3">
           
-          {/* Pastel Pro Box */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-50 via-indigo-50/60 to-blue-50 border border-purple-100/80 relative overflow-hidden">
+          {/* Pro Upgrade Box */}
+          <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100/80 relative overflow-hidden">
             <div className="flex items-center gap-2 mb-1.5">
               <div className="p-1 rounded-lg bg-[#635BFF] text-white">
                 <Zap className="w-3.5 h-3.5" />
@@ -204,7 +204,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </p>
             <button
               onClick={onOpenAiModal}
-              className="w-full py-2 px-3 bg-[#635BFF] hover:bg-[#5249ea] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5"
+              className="w-full py-2 px-3 bg-[#635BFF] hover:bg-[#5249ea] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Upgrade Now</span>

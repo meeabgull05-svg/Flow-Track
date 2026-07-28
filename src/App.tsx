@@ -4,6 +4,9 @@ import { TopBar } from './components/TopBar';
 import { DashboardView } from './components/DashboardView';
 import { TrackerView } from './components/TrackerView';
 import { ProjectsView } from './components/ProjectsView';
+import { AnalyticsView } from './components/AnalyticsView';
+import { ReportsView } from './components/ReportsView';
+import { GoalsView } from './components/GoalsView';
 import { YearHistoryView } from './components/YearHistoryView';
 import { CodeGuideView } from './components/CodeGuideView';
 import { LandingPage } from './components/LandingPage';
@@ -232,6 +235,7 @@ export default function App() {
               }}
               onOpenAiModal={() => setIsAiModalOpen(true)}
               onSeedData={handleSeedData}
+              onNavigateTab={setCurrentTab}
               user={user}
             />
           )}
@@ -270,8 +274,32 @@ export default function App() {
             />
           )}
 
+          {/* Dedicated Analytics Page */}
+          {currentTab === 'analytics' && (
+            <AnalyticsView
+              tasks={tasks}
+              user={user}
+            />
+          )}
+
+          {/* Dedicated Reports & Timesheets Page */}
+          {currentTab === 'reports' && (
+            <ReportsView
+              tasks={tasks}
+              user={user}
+            />
+          )}
+
+          {/* Dedicated Goals & Objectives Page */}
+          {currentTab === 'goals' && (
+            <GoalsView
+              tasks={tasks}
+              user={user}
+            />
+          )}
+
           {/* Other navigation tabs fallback to Dashboard */}
-          {(currentTab === 'calendar' || currentTab === 'analytics' || currentTab === 'reports' || currentTab === 'goals' || currentTab === 'settings') && (
+          {(currentTab === 'calendar' || currentTab === 'settings') && (
             <DashboardView
               tasks={tasks}
               activeTimerTaskId={activeTimerTaskId}
@@ -288,6 +316,7 @@ export default function App() {
               }}
               onOpenAiModal={() => setIsAiModalOpen(true)}
               onSeedData={handleSeedData}
+              onNavigateTab={setCurrentTab}
               user={user}
             />
           )}

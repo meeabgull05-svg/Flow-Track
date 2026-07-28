@@ -85,7 +85,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* AI Assistant Button */}
         <button
           onClick={onOpenAiModal}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-sm transition-all"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all"
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-300" />
           <span>AI Insights</span>
