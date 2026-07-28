@@ -13,12 +13,15 @@ import {
   ChevronRight, 
   Sparkles,
   Zap,
+  Building2,
+  Users,
   X
 } from 'lucide-react';
 
 export type NavTab = 
   | 'dashboard' 
   | 'tracker' 
+  | 'organization'
   | 'projects' 
   | 'calendar' 
   | 'analytics' 
@@ -35,6 +38,8 @@ interface SidebarProps {
   isOpenMobile: boolean;
   onCloseMobile: () => void;
   onOpenAiModal: () => void;
+  orgName?: string;
+  isOrgAdmin?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -42,11 +47,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setCurrentTab,
   isOpenMobile,
   onCloseMobile,
-  onOpenAiModal
+  onOpenAiModal,
+  orgName = 'Apex Tech Academy',
+  isOrgAdmin = true
 }) => {
   const mainNavItems = [
     { id: 'dashboard' as NavTab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'tracker' as NavTab, label: 'Time Tracker', icon: Timer, badge: 'Live' },
+    { id: 'organization' as NavTab, label: 'Organization Team', icon: Building2, badge: isOrgAdmin ? 'Admin' : 'Team' },
     { id: 'projects' as NavTab, label: 'Projects', icon: FolderKanban },
     { id: 'calendar' as NavTab, label: 'Calendar', icon: CalendarIcon },
     { id: 'analytics' as NavTab, label: 'Analytics', icon: BarChart3 },

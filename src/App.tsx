@@ -7,13 +7,14 @@ import { ProjectsView } from './components/ProjectsView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { ReportsView } from './components/ReportsView';
 import { GoalsView } from './components/GoalsView';
+import { OrganizationView } from './components/OrganizationView';
 import { YearHistoryView } from './components/YearHistoryView';
 import { CodeGuideView } from './components/CodeGuideView';
 import { LandingPage } from './components/LandingPage';
 import { AddTaskModal } from './components/AddTaskModal';
 import { AiInsightsModal } from './components/AiInsightsModal';
 import { AuthModal } from './components/AuthModal';
-import { Task, Category, UserProfile } from './types';
+import { Task, Category, UserProfile, Organization, TeamMember } from './types';
 import { DEFAULT_CATEGORIES, generate1YearSampleTasks } from './utils/sampleData';
 
 export default function App() {
@@ -24,13 +25,114 @@ export default function App() {
   // Categories & User Profile
   const [categories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [user, setUser] = useState<UserProfile>({
-    id: 'usr_clerk_flowtrack_001',
-    name: 'Fahad Ali',
-    email: 'fahadali.dev@gmail.com',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    role: 'Premium Member',
+    id: 'usr_admin_001',
+    name: 'Meeab Gull (Admin)',
+    email: 'admin@apexacademy.edu',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    role: 'School & Organization Admin',
     isSignedIn: true,
+    accountType: 'OrgAdmin',
+    orgId: 'org_apex_01',
+    orgName: 'Apex Tech & Education Academy',
+    orgType: 'School/University',
+    orgRole: 'Admin'
   });
+
+  // Organization Workspace State
+  const [organization, setOrganization] = useState<Organization>({
+    id: 'org_apex_01',
+    name: 'Apex Tech & Education Academy',
+    type: 'School/University',
+    logo: 'https://images.unsplash.com/photo-1562774053-701939374585?w=150&auto=format&fit=crop&q=80',
+    code: 'APEX-8921',
+    memberCount: 5,
+    adminName: 'Meeab Gull',
+    adminEmail: 'admin@apexacademy.edu'
+  });
+
+  // Team Members State
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
+    {
+      id: 'usr_admin_001',
+      name: 'Meeab Gull',
+      email: 'admin@apexacademy.edu',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+      role: 'Principal & Org Admin',
+      department: 'Management',
+      activeStatus: 'Tracking',
+      currentTaskTitle: 'Reviewing Curriculum & Team Velocity Reports',
+      todayLoggedSeconds: 14820, // 4h 07m
+      weeklyLoggedSeconds: 124000,
+      completedTasksCount: 12,
+      assignedTasksCount: 4,
+      joinedDate: '2025-01-10',
+      orgRole: 'Admin'
+    },
+    {
+      id: 'usr_member_002',
+      name: 'Sarah Khan',
+      email: 'sarah.k@apexacademy.edu',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+      role: 'Senior UI/UX Designer',
+      department: 'Design & Product',
+      activeStatus: 'Tracking',
+      currentTaskTitle: 'Designing Student Portal Dashboard Wireframes',
+      todayLoggedSeconds: 18400, // 5h 06m
+      weeklyLoggedSeconds: 118000,
+      completedTasksCount: 18,
+      assignedTasksCount: 3,
+      joinedDate: '2025-02-01',
+      orgRole: 'Member'
+    },
+    {
+      id: 'usr_member_003',
+      name: 'Professor Usman',
+      email: 'usman.prof@apexacademy.edu',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      role: 'Senior Faculty Head',
+      department: 'Academic Faculty',
+      activeStatus: 'Break',
+      currentTaskTitle: 'Grading Midterm Physics & CS Papers',
+      todayLoggedSeconds: 11200, // 3h 06m
+      weeklyLoggedSeconds: 95000,
+      completedTasksCount: 9,
+      assignedTasksCount: 5,
+      joinedDate: '2025-01-15',
+      orgRole: 'Manager'
+    },
+    {
+      id: 'usr_member_004',
+      name: 'Ali Raza',
+      email: 'ali.dev@apexacademy.edu',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+      role: 'Frontend Engineer',
+      department: 'Engineering',
+      activeStatus: 'Tracking',
+      currentTaskTitle: 'Refactoring React Stopwatch Component & Local Storage',
+      todayLoggedSeconds: 16200, // 4h 30m
+      weeklyLoggedSeconds: 110000,
+      completedTasksCount: 15,
+      assignedTasksCount: 2,
+      joinedDate: '2025-02-10',
+      orgRole: 'Member'
+    },
+    {
+      id: 'usr_member_005',
+      name: 'Ayesha Noor',
+      email: 'ayesha.n@apexacademy.edu',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      role: 'Junior Research Student',
+      department: 'Students',
+      activeStatus: 'Idle',
+      currentTaskTitle: 'Preparing Final Semester Presentation',
+      todayLoggedSeconds: 7200, // 2h 00m
+      weeklyLoggedSeconds: 68000,
+      completedTasksCount: 6,
+      assignedTasksCount: 2,
+      joinedDate: '2025-03-01',
+      orgRole: 'Member'
+    }
+  ]);
 
   // Tasks state with LocalStorage persistence
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -165,6 +267,49 @@ export default function App() {
     }
   };
 
+  // Add Team Member to Organization
+  const handleAddTeamMember = (memberData: Omit<TeamMember, 'id' | 'joinedDate'>) => {
+    const newMember: TeamMember = {
+      ...memberData,
+      id: `usr_${Date.now()}`,
+      joinedDate: new Date().toISOString().split('T')[0]
+    };
+
+    setTeamMembers(prev => [...prev, newMember]);
+    setOrganization(prev => ({
+      ...prev,
+      memberCount: prev.memberCount + 1
+    }));
+  };
+
+  // Assign Task to Team Member
+  const handleAssignTask = (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at' | 'time_spent_seconds'>) => {
+    const nowISO = new Date().toISOString();
+    const newTask: Task = {
+      id: `task_assigned_${Date.now()}`,
+      time_spent_seconds: 0,
+      created_at: nowISO,
+      updated_at: nowISO,
+      ...taskData
+    };
+
+    setTasks(prev => [newTask, ...prev]);
+
+    // Update assigned count for team member
+    if (taskData.assigned_to_id) {
+      setTeamMembers(prev => prev.map(m => {
+        if (m.id === taskData.assigned_to_id) {
+          return {
+            ...m,
+            assignedTasksCount: m.assignedTasksCount + 1,
+            currentTaskTitle: taskData.title
+          };
+        }
+        return m;
+      }));
+    }
+  };
+
   // Seed 1-Year Sample Data
   const handleSeedData = () => {
     const sample = generate1YearSampleTasks();
@@ -193,6 +338,8 @@ export default function App() {
         isOpenMobile={isOpenMobileSidebar}
         onCloseMobile={() => setIsOpenMobileSidebar(false)}
         onOpenAiModal={() => setIsAiModalOpen(true)}
+        orgName={organization.name}
+        isOrgAdmin={user.accountType === 'OrgAdmin' || user.orgRole === 'Admin'}
       />
 
       {/* Main Content Area (Offset by 64px / lg:ml-64 for fixed sidebar) */}
@@ -257,6 +404,19 @@ export default function App() {
                 setIsAddTaskOpen(true);
               }}
               user={user}
+            />
+          )}
+
+          {/* Dedicated Organization & Team Workspace */}
+          {currentTab === 'organization' && (
+            <OrganizationView
+              user={user}
+              organization={organization}
+              teamMembers={teamMembers}
+              onAddTeamMember={handleAddTeamMember}
+              onAssignTask={handleAssignTask}
+              tasks={tasks}
+              onOpenAuthModal={() => setIsAuthModalOpen(true)}
             />
           )}
 
