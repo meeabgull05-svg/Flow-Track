@@ -4,18 +4,16 @@ import {
   Pause, 
   Clock, 
   TrendingUp, 
-  Calendar, 
-  BarChart2, 
+  FolderKanban, 
+  Users, 
   Plus, 
-  FolderPlus, 
-  CheckCircle2, 
-  Circle, 
-  ChevronDown, 
-  ArrowRight,
+  Search, 
+  Bell, 
+  ChevronRight,
   Folder,
-  Sparkles,
-  Zap,
-  MoreHorizontal
+  BarChart2,
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import { Task, UserProfile } from '../types';
 import { formatDuration } from '../utils/timeUtils';
@@ -48,572 +46,524 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigateTab,
   user,
 }) => {
-  // Local States
-  const [timeOverviewFilter, setTimeOverviewFilter] = useState<'This Week' | 'This Month' | 'Today'>('This Week');
-  const [newTaskInput, setNewTaskInput] = useState('');
-
-  // Active or Default Running Task
+  // Chart Segment filter
+  const [chartSegment, setChartSegment] = useState<'Week' | 'Month'>('Week');
+  
+  // Active Task
   const activeTask = tasks.find((t) => t.id === activeTimerTaskId) || tasks[0];
+  const [taskInputText, setTaskInputText] = useState(activeTask ? activeTask.title : 'Building the onboarding flow');
 
-  // Helper for digital timer formatting
-  const formatTimerDigits = (secs: number) => {
+  // Format timer string (e.g. 02:14:37)
+  const formatTimerString = (secs: number) => {
     const h = Math.floor(secs / 3600);
     const m = Math.floor((secs % 3600) / 60);
     const s = Math.floor(secs % 60);
     const pad = (n: number) => n.toString().padStart(2, '0');
-    return {
-      hours: pad(h),
-      minutes: pad(m),
-      seconds: pad(s),
-    };
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
   };
 
-  const timerDigits = formatTimerDigits(activeTask ? activeTask.time_spent_seconds : 8305); // Default 02:18:25 if 8305s
+  const activeSeconds = activeTask ? activeTask.time_spent_seconds : 8077; // 02:14:37
 
-  // Quick inline add task handler
-  const handleQuickAddTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskInput.trim()) return;
-    onOpenAddTask();
-    setNewTaskInput('');
-  };
-
-  // Static Projects Overview Data
-  const projectsOverview = [
-    { name: 'FlowTrack Website', spent: '32h', goal: '40h', progress: 80, color: 'bg-[#635BFF]', bgLight: 'bg-purple-50' },
-    { name: 'Client Dashboard', spent: '18h', goal: '25h', progress: 72, color: 'bg-emerald-500', bgLight: 'bg-emerald-50' },
-    { name: 'Mobile App', spent: '24h', goal: '30h', progress: 80, color: 'bg-amber-500', bgLight: 'bg-amber-50' },
-    { name: 'Marketing Site', spent: '10h', goal: '15h', progress: 66, color: 'bg-blue-500', bgLight: 'bg-blue-50' },
-  ];
-
-  // Upcoming Schedule Items
-  const upcomingSchedule = [
+  // Projects in flow mock data merged with real tasks info
+  const projectsInFlow = [
     {
-      time: '10:30 AM',
-      title: 'Design Review',
-      project: 'FlowTrack Project',
-      iconBg: 'bg-purple-100 text-[#635BFF]',
-      cardBg: 'bg-purple-50/60 border-purple-100/80',
+      id: 'proj_1',
+      name: 'Client Website — Redesign',
+      client: 'Northline Design',
+      timeSpent: '14h 20m',
+      progress: 72,
+      status: 'On track',
+      isRisk: false,
+      color: 'bg-[#2E4CFF]',
+      avatars: [
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80'
+      ]
     },
     {
-      time: '02:00 PM',
-      title: 'Team Meeting',
-      project: 'Weekly Sync',
-      iconBg: 'bg-emerald-100 text-emerald-600',
-      cardBg: 'bg-emerald-50/60 border-emerald-100/80',
+      id: 'proj_2',
+      name: 'Brand Refresh',
+      client: 'Northline Design',
+      timeSpent: '6h 45m',
+      progress: 38,
+      status: 'On track',
+      isRisk: false,
+      color: 'bg-[#1F9D6B]',
+      avatars: [
+        'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80'
+      ]
     },
     {
-      time: '04:00 PM',
-      title: 'Client Call',
-      project: 'Client Dashboard Project',
-      iconBg: 'bg-amber-100 text-amber-600',
-      cardBg: 'bg-amber-50/60 border-amber-100/80',
+      id: 'proj_3',
+      name: 'Mobile App — Sprint 4',
+      client: 'Vela Systems',
+      timeSpent: '18h 05m',
+      progress: 94,
+      status: 'Near budget',
+      isRisk: true,
+      color: 'bg-[#E8862B]',
+      avatars: [
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80'
+      ]
     },
+    {
+      id: 'proj_4',
+      name: 'Internal Ops',
+      client: 'Flow Track Team',
+      timeSpent: '3h 10m',
+      progress: 20,
+      status: 'On track',
+      isRisk: false,
+      color: 'bg-[#8A8E97]',
+      avatars: [
+        'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80'
+      ]
+    }
   ];
 
-  // Chart Coordinates for Line Chart (Mon to Sun)
-  const chartPoints = [
-    { day: 'Mon', val: 2.2, x: 50, y: 150 },
-    { day: 'Tue', val: 4.8, x: 120, y: 100 },
-    { day: 'Wed', val: 3.5, x: 190, y: 125 },
-    { day: 'Thu', val: 6.2, x: 260, y: 70 },
-    { day: 'Fri', val: 4.5, x: 330, y: 105 },
-    { day: 'Sat', val: 7.2, x: 400, y: 50 },
-    { day: 'Sun', val: 5.8, x: 470, y: 80 },
+  // Daily Chart Bars Data (Height in px, fill height in %)
+  const dailyBars = [
+    { day: 'MON', heightPx: 105, fillPct: 80 },
+    { day: 'TUE', heightPx: 150, fillPct: 60 },
+    { day: 'WED', heightPx: 170, fillPct: 92 },
+    { day: 'THU', heightPx: 120, fillPct: 50 },
+    { day: 'FRI', heightPx: 145, fillPct: 74 },
+    { day: 'SAT', heightPx: 70, fillPct: 30 },
+    { day: 'SUN', heightPx: 45, fillPct: 14 }
   ];
 
-  // Build smooth SVG curve path string
-  const svgPathD = `M ${chartPoints.map(p => `${p.x},${p.y}`).join(' L ')}`;
-  const svgAreaD = `M 50,190 L ${chartPoints.map(p => `${p.x},${p.y}`).join(' L ')} L 470,190 Z`;
+  const firstName = user.name.split(' ')[0] || 'Sara';
 
   return (
-    <div className="space-y-6 pb-12 text-slate-800">
+    <div className="space-y-6 pb-12 text-[#15181D]">
       
-      {/* 1. Header Row (Greeting + Date Selector) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* ---------- TOPBAR HEADER ---------- */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            Good Morning, Everyone! 👋
+          <h1 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight text-[#15181D]">
+            Good afternoon, {firstName}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-            Stay focused and track your progress.
+          <p className="text-xs sm:text-sm text-[#8A8E97] mt-0.5 font-normal">
+            Here's how your week is flowing so far.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Date Picker Button */}
-          <button className="px-4 py-2 bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl text-xs font-bold text-slate-700 shadow-xs transition-all flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-[#635BFF]" />
-            <span>May 9, 2024</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Notification Bell Circle */}
+          <button
+            onClick={onOpenAiModal}
+            className="w-9 h-9 rounded-full bg-white border border-[#E4E4DF] flex items-center justify-center text-[#4B4F58] hover:bg-slate-50 transition-colors relative cursor-pointer"
+            title="Notifications & Alerts"
+          >
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#E8862B]" />
+          </button>
+
+          {/* AI Insights / Search Button */}
+          <button
+            onClick={onOpenAiModal}
+            className="w-9 h-9 rounded-full bg-white border border-[#E4E4DF] flex items-center justify-center text-[#4B4F58] hover:bg-slate-50 transition-colors cursor-pointer"
+            title="AI Insights"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+
+          {/* New Project Button */}
+          <button
+            onClick={onOpenAddTask}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2E4CFF] hover:bg-[#1B2FBF] text-white font-semibold text-xs sm:text-sm shadow-sm transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>New project</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Top 4 Stat Cards Row */}
+
+      {/* ---------- ACTIVE TIMER BAR ---------- */}
+      <div className="bg-[#15181D] text-white rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row items-stretch md:items-center gap-4 md:gap-6 relative overflow-hidden shadow-lg shadow-black/10">
+        
+        {/* Radial Ambient Blue Glow Background */}
+        <div className="absolute -right-16 -top-20 w-64 h-64 rounded-full bg-[#2E4CFF]/30 blur-3xl pointer-events-none" />
+
+        {/* Task Input Field */}
+        <div className="flex-1 relative z-10">
+          <input
+            type="text"
+            value={taskInputText}
+            onChange={(e) => setTaskInputText(e.target.value)}
+            placeholder="What are you working on?"
+            className="w-full bg-transparent border-none outline-none text-white font-sans text-base sm:text-lg font-medium placeholder-[#7A7F90] focus:ring-0 p-0"
+          />
+        </div>
+
+        {/* Tag Pill */}
+        <div className="relative z-10 flex items-center gap-2 bg-[#232733] px-3.5 py-2 rounded-full text-xs font-medium text-[#B6BAC9] border border-white/5 shrink-0 self-start md:self-auto">
+          <span className="w-2 h-2 rounded-xs bg-[#2E4CFF]" />
+          <span>{activeTask ? (activeTask.project_name || 'Client Website — Redesign') : 'Client Website — Redesign'}</span>
+        </div>
+
+        {/* Live Timer Clock */}
+        <div className="relative z-10 font-mono text-2xl sm:text-3xl font-bold text-white min-w-[130px] text-left md:text-right">
+          {formatTimerString(activeSeconds)}
+        </div>
+
+        {/* Pause / Play Button */}
+        <div className="relative z-10 shrink-0 flex justify-end">
+          <button
+            onClick={() => activeTask && onToggleTimer(activeTask.id)}
+            className="w-11 h-11 rounded-full bg-[#2E4CFF] hover:bg-[#1B2FBF] text-white flex items-center justify-center cursor-pointer shadow-lg shadow-[#2E4CFF]/35 transition-all transform hover:scale-105 active:scale-95"
+            title={activeTimerTaskId === activeTask?.id ? "Pause timer" : "Start timer"}
+          >
+            {activeTimerTaskId === activeTask?.id ? (
+              <Pause className="w-5 h-5 fill-current" />
+            ) : (
+              <Play className="w-5 h-5 fill-current ml-0.5" />
+            )}
+          </button>
+        </div>
+
+      </div>
+
+
+      {/* ---------- STAT CARDS (4 CARDS) ---------- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        {/* Card 1: Time Today */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-shadow">
+        {/* Card 1: Tracked this week */}
+        <div className="bg-white border border-[#E4E4DF] rounded-2xl p-5 shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-purple-50 text-[#635BFF]">
-                <Clock className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-bold text-slate-500">
-                Time Today
-              </span>
+            <div className="w-8 h-8 rounded-lg bg-[#EAEEFF] text-[#2E4CFF] flex items-center justify-center">
+              <Clock className="w-4 h-4" />
             </div>
+            <span className="font-mono text-xs font-bold text-[#1F9D6B] bg-[#E6F6EF] px-2.5 py-0.5 rounded-full">
+              ↑ 12%
+            </span>
           </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <div>
-              <span className="text-2xl font-black text-slate-900 font-mono">
-                6h 24m
-              </span>
-              <p className="text-[11px] text-slate-400 font-medium mt-0.5">of 8h goal</p>
-            </div>
-            <span className="text-xs font-extrabold text-[#635BFF]">80%</span>
-          </div>
-          <div className="w-full bg-slate-100 rounded-full h-2 mt-2.5 overflow-hidden">
-            <div className="bg-[#635BFF] h-2 rounded-full" style={{ width: '80%' }} />
+          <div>
+            <span className="font-serif text-2xl sm:text-3xl font-normal text-[#15181D] tracking-tight block">
+              32h 40m
+            </span>
+            <span className="text-xs text-[#8A8E97] font-medium block mt-1">
+              Tracked this week
+            </span>
           </div>
         </div>
 
-        {/* Card 2: Time This Week */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-shadow">
+        {/* Card 2: Billable hours */}
+        <div className="bg-white border border-[#E4E4DF] rounded-2xl p-5 shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-600">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-bold text-slate-500">
-                Time This Week
-              </span>
+            <div className="w-8 h-8 rounded-lg bg-[#E6F6EF] text-[#1F9D6B] flex items-center justify-center">
+              <BarChart2 className="w-4 h-4" />
             </div>
+            <span className="font-mono text-xs font-bold text-[#1F9D6B] bg-[#E6F6EF] px-2.5 py-0.5 rounded-full">
+              ↑ 4%
+            </span>
           </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <div>
-              <span className="text-2xl font-black text-slate-900 font-mono">
-                32h 15m
-              </span>
-              <p className="text-[11px] text-slate-400 font-medium mt-0.5">of 40h goal</p>
-            </div>
-            <span className="text-xs font-extrabold text-emerald-600">80%</span>
-          </div>
-          <div className="w-full bg-slate-100 rounded-full h-2 mt-2.5 overflow-hidden">
-            <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '80%' }} />
+          <div>
+            <span className="font-serif text-2xl sm:text-3xl font-normal text-[#15181D] tracking-tight block">
+              27h 05m
+            </span>
+            <span className="text-xs text-[#8A8E97] font-medium block mt-1">
+              Billable hours
+            </span>
           </div>
         </div>
 
-        {/* Card 3: Time This Month */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-shadow">
+        {/* Card 3: Active projects */}
+        <div className="bg-white border border-[#E4E4DF] rounded-2xl p-5 shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-600">
-                <Calendar className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-bold text-slate-500">
-                Time This Month
-              </span>
+            <div className="w-8 h-8 rounded-lg bg-[#FBEEE1] text-[#E8862B] flex items-center justify-center">
+              <FolderKanban className="w-4 h-4" />
             </div>
+            <span className="font-mono text-xs font-bold text-[#C0392B] bg-[#FBEBE9] px-2.5 py-0.5 rounded-full">
+              ↓ 2%
+            </span>
           </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <div>
-              <span className="text-2xl font-black text-slate-900 font-mono">
-                128h 45m
-              </span>
-              <p className="text-[11px] text-slate-400 font-medium mt-0.5">of 160h goal</p>
-            </div>
-            <span className="text-xs font-extrabold text-blue-600">80%</span>
-          </div>
-          <div className="w-full bg-slate-100 rounded-full h-2 mt-2.5 overflow-hidden">
-            <div className="bg-blue-500 h-2 rounded-full" style={{ width: '80%' }} />
+          <div>
+            <span className="font-serif text-2xl sm:text-3xl font-normal text-[#15181D] tracking-tight block">
+              12
+            </span>
+            <span className="text-xs text-[#8A8E97] font-medium block mt-1">
+              Active projects
+            </span>
           </div>
         </div>
 
-        {/* Card 4: Productivity */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-shadow">
+        {/* Card 4: Team members in flow */}
+        <div className="bg-white border border-[#E4E4DF] rounded-2xl p-5 shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-amber-50 text-amber-600">
-                <BarChart2 className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-bold text-slate-500">
-                Productivity
-              </span>
+            <div className="w-8 h-8 rounded-lg bg-[#EAEEFF] text-[#2E4CFF] flex items-center justify-center">
+              <Users className="w-4 h-4" />
             </div>
+            <span className="font-mono text-xs font-bold text-[#1F9D6B] bg-[#E6F6EF] px-2.5 py-0.5 rounded-full">
+              ↑ 3
+            </span>
           </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <div>
-              <span className="text-2xl font-black text-slate-900 font-mono">
-                94%
-              </span>
-              <p className="text-[11px] text-amber-600 font-bold mt-0.5">Excellent</p>
-            </div>
-          </div>
-          <div className="w-full bg-slate-100 rounded-full h-2 mt-2.5 overflow-hidden">
-            <div className="bg-amber-500 h-2 rounded-full" style={{ width: '94%' }} />
+          <div>
+            <span className="font-serif text-2xl sm:text-3xl font-normal text-[#15181D] tracking-tight block">
+              8
+            </span>
+            <span className="text-xs text-[#8A8E97] font-medium block mt-1">
+              Team members in flow
+            </span>
           </div>
         </div>
 
       </div>
 
-      {/* 3. Middle Section: Current Task + Today's Tasks + Upcoming Schedule */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      {/* ---------- GRID: CHART + RECENT ACTIVITY ---------- */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         
-        {/* Box 1: Current Task (Solid Indigo Card) - 5 Cols */}
-        <div className="lg:col-span-5 bg-[#635BFF] text-white rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col justify-between space-y-6">
-          
-          {/* Subtle Accent Glow */}
-          <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-xl pointer-events-none" />
-
-          <div className="relative z-10">
-            <span className="text-xs font-semibold text-purple-200 uppercase tracking-wider block mb-3">
-              Current Task
-            </span>
-
-            <h2 className="text-xl sm:text-2xl font-black text-white leading-snug">
-              {activeTask ? activeTask.title : 'UI/UX Design'}
-            </h2>
-
-            <div className="flex items-center gap-2 mt-2 text-xs text-purple-100/90 font-medium">
-              <Folder className="w-4 h-4 text-purple-200" />
-              <span>FlowTrack Website Redesign</span>
-            </div>
-          </div>
-
-          {/* Digital Timer Clock Display + Floating Control Button */}
-          <div className="relative z-10 flex items-center justify-between bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 sm:p-5">
+        {/* Left Card: Hours by day (7 Cols) */}
+        <div className="lg:col-span-7 bg-white border border-[#E4E4DF] rounded-2xl p-5 sm:p-6 space-y-5">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-3xl sm:text-4xl font-black font-mono tracking-wider text-white">
-                {timerDigits.hours}:{timerDigits.minutes}:{timerDigits.seconds}
-              </div>
-              <div className="flex gap-6 text-[10px] font-bold text-purple-200 uppercase tracking-widest mt-1">
-                <span>hr</span>
-                <span>min</span>
-                <span>sec</span>
-              </div>
+              <h3 className="text-sm font-semibold text-[#15181D]">Hours by day</h3>
+              <span className="font-mono text-[10.5px] text-[#8A8E97] font-semibold uppercase tracking-wider block mt-0.5">
+                THIS WEEK · 32H 40M TOTAL
+              </span>
             </div>
 
-            {/* Glowing Pause/Play Button */}
-            {activeTask && (
+            {/* Segment Switcher */}
+            <div className="flex bg-[#F7F7F4] p-1 rounded-lg">
               <button
-                onClick={() => onToggleTimer(activeTask.id)}
-                className="w-12 h-12 rounded-2xl bg-white text-[#635BFF] shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center shrink-0"
+                type="button"
+                onClick={() => setChartSegment('Week')}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  chartSegment === 'Week'
+                    ? 'bg-white text-[#15181D] shadow-2xs'
+                    : 'text-[#8A8E97] hover:text-[#15181D]'
+                }`}
               >
-                {activeTimerTaskId === activeTask.id ? (
-                  <Pause className="w-5 h-5 fill-current" />
-                ) : (
-                  <Play className="w-5 h-5 fill-current ml-0.5" />
-                )}
+                Week
               </button>
-            )}
-          </div>
-
-          {/* Bottom Row */}
-          <div className="relative z-10 flex items-center justify-between text-xs font-semibold text-purple-100 pt-2 border-t border-white/10">
-            <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Tracking time
-            </span>
-
-            <button 
-              onClick={() => activeTask && onOpenEditTask(activeTask)}
-              className="hover:text-white flex items-center gap-1 transition-colors"
-            >
-              <span>View Details</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-        </div>
-
-        {/* Box 2: Today's Tasks - 4 Cols */}
-        <div className="lg:col-span-4 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-extrabold text-slate-900">Today's Tasks</h3>
-              <button 
-                onClick={() => onNavigateTab ? onNavigateTab('tracker') : onOpenAddTask()}
-                className="text-xs font-bold text-[#635BFF] hover:underline cursor-pointer"
+              <button
+                type="button"
+                onClick={() => setChartSegment('Month')}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  chartSegment === 'Month'
+                    ? 'bg-white text-[#15181D] shadow-2xs'
+                    : 'text-[#8A8E97] hover:text-[#15181D]'
+                }`}
               >
-                View all
+                Month
               </button>
-            </div>
-
-            <div className="space-y-3">
-              {tasks.slice(0, 4).map((task, idx) => {
-                const colors = ['bg-[#635BFF]', 'bg-emerald-500', 'bg-amber-500', 'bg-blue-500'];
-                return (
-                  <div
-                    key={task.id}
-                    className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/60 hover:bg-slate-100/80 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <button
-                        onClick={() => onToggleComplete(task.id)}
-                        className="text-slate-400 hover:text-emerald-600 transition-colors"
-                      >
-                        {task.status === 'Completed' ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                        ) : (
-                          <span className={`w-3 h-3 rounded-full ${colors[idx % colors.length]} shrink-0 inline-block`} />
-                        )}
-                      </button>
-
-                      <span className={`text-xs font-bold truncate ${task.status === 'Completed' ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                        {task.title}
-                      </span>
-                    </div>
-
-                    <span className="text-xs font-mono font-bold text-slate-500 shrink-0 ml-2">
-                      {formatDuration(task.time_spent_seconds)}
-                    </span>
-                  </div>
-                );
-              })}
             </div>
           </div>
 
-          {/* Add a new task quick button */}
-          <form onSubmit={handleQuickAddTask} className="pt-2 border-t border-slate-100">
-            <div className="flex items-center gap-2">
-              <Circle className="w-4 h-4 text-slate-300 shrink-0" />
-              <input
-                type="text"
-                placeholder="Add a new task..."
-                value={newTaskInput}
-                onChange={(e) => setNewTaskInput(e.target.value)}
-                className="w-full text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none bg-transparent"
-              />
-              <button type="submit" className="p-1 text-slate-400 hover:text-[#635BFF]">
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </form>
-
-        </div>
-
-        {/* Box 3: Upcoming Schedule - 3 Cols */}
-        <div className="lg:col-span-3 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-extrabold text-slate-900">Upcoming Schedule</h3>
-              <button 
-                onClick={() => onNavigateTab ? onNavigateTab('tracker') : null}
-                className="text-xs font-bold text-[#635BFF] hover:underline cursor-pointer"
-              >
-                View all
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {upcomingSchedule.map((item, idx) => (
+          {/* Bar Chart Visualization */}
+          <div className="pt-2">
+            <div className="flex items-end gap-3 sm:gap-4 h-44 px-1">
+              {dailyBars.map((b, idx) => (
                 <div
                   key={idx}
-                  className={`p-3.5 rounded-2xl border ${item.cardBg} transition-transform hover:-translate-y-0.5`}
+                  style={{ height: `${b.heightPx}px` }}
+                  className="flex-1 bg-[#EAEEFF] rounded-t-md rounded-b-xs relative group cursor-pointer"
                 >
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className={`p-1 rounded-lg ${item.iconBg}`}>
-                      <Calendar className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-[11px] font-bold text-slate-500">
-                      {item.time}
-                    </span>
+                  {/* Billable inner bar */}
+                  <i
+                    style={{ height: `${b.fillPct}%` }}
+                    className="absolute bottom-0 left-0 right-0 bg-[#2E4CFF] rounded-t-md rounded-b-xs transition-all group-hover:bg-[#1B2FBF]"
+                  />
+                  {/* Tooltip */}
+                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#15181D] text-white text-[10px] font-mono px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    {Math.round((b.heightPx / 170) * 8)}h
                   </div>
-
-                  <h4 className="text-xs font-extrabold text-slate-900">{item.title}</h4>
-                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">{item.project}</p>
                 </div>
               ))}
             </div>
+
+            {/* Bar Day Labels */}
+            <div className="flex justify-between gap-3 sm:gap-4 mt-2.5 px-1 font-mono text-[10.5px] text-[#8A8E97]">
+              {dailyBars.map((b) => (
+                <span key={b.day} className="flex-1 text-center">{b.day}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-5 pt-3 border-t border-[#E4E4DF] text-xs text-[#4B4F58] font-medium">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-xs bg-[#2E4CFF]" />
+              <span>Billable</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-xs bg-[#EAEEFF]" />
+              <span>Internal</span>
+            </div>
+          </div>
+
+        </div>
+
+
+        {/* Right Card: Recent Activity (5 Cols) */}
+        <div className="lg:col-span-5 bg-white border border-[#E4E4DF] rounded-2xl p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between pb-1">
+            <h3 className="text-sm font-semibold text-[#15181D]">Recent activity</h3>
+            <span className="font-mono text-[10.5px] text-[#8A8E97] font-semibold uppercase">
+              TODAY
+            </span>
+          </div>
+
+          <div className="space-y-1 divide-y divide-[#F0F0EC]">
+            
+            {/* Activity 1 */}
+            <div className="flex items-center gap-3 py-2.5 first:pt-0">
+              <span className="w-2 h-9 rounded-md bg-[#2E4CFF] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <b className="text-xs font-semibold text-[#15181D] block truncate">Onboarding flow</b>
+                <span className="text-[11px] text-[#8A8E97] block truncate">Client Website — Redesign</span>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="font-mono text-xs font-semibold text-[#15181D] block">2:14:37</span>
+                <span className="text-[10px] text-[#1F9D6B] font-medium block">Running</span>
+              </div>
+            </div>
+
+            {/* Activity 2 */}
+            <div className="flex items-center gap-3 py-2.5">
+              <span className="w-2 h-9 rounded-md bg-[#1F9D6B] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <b className="text-xs font-semibold text-[#15181D] block truncate">Discovery call</b>
+                <span className="text-[11px] text-[#8A8E97] block truncate">Northline — Brand Refresh</span>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="font-mono text-xs text-[#15181D] block">1:05:12</span>
+                <span className="text-[10px] text-[#8A8E97] block">11:20 AM</span>
+              </div>
+            </div>
+
+            {/* Activity 3 */}
+            <div className="flex items-center gap-3 py-2.5">
+              <span className="w-2 h-9 rounded-md bg-[#E8862B] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <b className="text-xs font-semibold text-[#15181D] block truncate">Wireframes v2</b>
+                <span className="text-[11px] text-[#8A8E97] block truncate">Client Website — Redesign</span>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="font-mono text-xs text-[#15181D] block">3:40:08</span>
+                <span className="text-[10px] text-[#8A8E97] block">9:00 AM</span>
+              </div>
+            </div>
+
+            {/* Activity 4 */}
+            <div className="flex items-center gap-3 py-2.5">
+              <span className="w-2 h-9 rounded-md bg-[#8A8E97] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <b className="text-xs font-semibold text-[#15181D] block truncate">Internal standup</b>
+                <span className="text-[11px] text-[#8A8E97] block truncate">Team — General</span>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="font-mono text-xs text-[#15181D] block">0:15:00</span>
+                <span className="text-[10px] text-[#8A8E97] block">Yesterday</span>
+              </div>
+            </div>
+
           </div>
         </div>
 
       </div>
 
-      {/* 4. Lower Section Grid: Projects Overview + Time Overview (Chart) + Right Column */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      {/* ---------- PROJECT TABLE: PROJECTS IN FLOW ---------- */}
+      <div className="bg-white border border-[#E4E4DF] rounded-2xl overflow-hidden shadow-2xs">
         
-        {/* Left Column: Projects Overview - 4 Cols */}
-        <div className="lg:col-span-4 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-base font-extrabold text-slate-900">Projects Overview</h3>
-            <button 
-              onClick={() => onNavigateTab ? onNavigateTab('projects') : null}
-              className="text-xs font-bold text-[#635BFF] hover:underline cursor-pointer"
-            >
-              View all
-            </button>
-          </div>
+        {/* Table Header */}
+        <div className="flex items-center justify-between p-5 border-b border-[#E4E4DF]">
+          <h3 className="text-sm sm:text-base font-semibold text-[#15181D]">Projects in flow</h3>
+          <button
+            onClick={onOpenAddTask}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#2E4CFF] hover:bg-[#1B2FBF] text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>New project</span>
+          </button>
+        </div>
 
-          <div className="space-y-4">
-            {projectsOverview.map((proj, idx) => (
-              <div key={idx} className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold">
-                  <div className="flex items-center gap-2.5">
-                    <span className={`w-3.5 h-3.5 rounded-lg ${proj.color} flex items-center justify-center text-white text-[9px]`}>
-                      ■
+        {/* Responsive Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-[#E4E4DF] bg-[#F7F7F4]/50">
+                <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Project</th>
+                <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Time this week</th>
+                <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Budget used</th>
+                <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Status</th>
+                <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Team</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F0F0EC]">
+              {projectsInFlow.map((proj) => (
+                <tr key={proj.id} className="hover:bg-[#F7F7F4]/40 transition-colors">
+                  
+                  {/* Project Name & Client */}
+                  <td className="py-4 px-5">
+                    <div className="flex items-center gap-3">
+                      <span className={`w-2.5 h-2.5 rounded-xs shrink-0 ${proj.color}`} />
+                      <div>
+                        <div className="text-xs font-semibold text-[#15181D]">{proj.name}</div>
+                        <div className="text-[11px] text-[#8A8E97] font-normal">{proj.client}</div>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Time This Week */}
+                  <td className="py-4 px-5 font-mono text-xs font-medium text-[#15181D]">
+                    {proj.timeSpent}
+                  </td>
+
+                  {/* Budget Progress Bar */}
+                  <td className="py-4 px-5">
+                    <div className="flex items-center gap-3 min-w-[140px]">
+                      <div className="flex-1 h-1.5 bg-[#F0F0EC] rounded-full overflow-hidden">
+                        <div
+                          style={{ width: `${proj.progress}%` }}
+                          className={`h-full rounded-full ${proj.isRisk ? 'bg-[#E8862B]' : 'bg-[#2E4CFF]'}`}
+                        />
+                      </div>
+                      <span className="font-mono text-xs text-[#4B4F58] min-w-[32px]">
+                        {proj.progress}%
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Status Pill */}
+                  <td className="py-4 px-5">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      proj.isRisk 
+                        ? 'bg-[#FBEEE1] text-[#E8862B]' 
+                        : 'bg-[#E6F6EF] text-[#1F9D6B]'
+                    }`}>
+                      <span className="w-1.5 h-1.5 rounded-full fill-current bg-current" />
+                      <span>{proj.status}</span>
                     </span>
-                    <span className="text-slate-800">{proj.name}</span>
-                  </div>
-                  <span className="font-mono text-slate-500">
-                    {proj.spent} / <span className="text-slate-400">{proj.goal}</span>
-                  </span>
-                </div>
+                  </td>
 
-                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                  <div className={`h-2 rounded-full ${proj.color}`} style={{ width: `${proj.progress}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+                  {/* Team Avatars */}
+                  <td className="py-4 px-5">
+                    <div className="flex items-center -space-x-2">
+                      {proj.avatars.map((img, i) => (
+                        <img
+                          key={i}
+                          src={img}
+                          alt="Team avatar"
+                          referrerPolicy="no-referrer"
+                          className="w-6 h-6 rounded-full border-2 border-white object-cover"
+                        />
+                      ))}
+                    </div>
+                  </td>
 
-        {/* Middle Column: Time Overview (Line Chart) - 5 Cols */}
-        <div className="lg:col-span-5 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-base font-extrabold text-slate-900">Time Overview</h3>
-            
-            <button className="px-3 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
-              <span>{timeOverviewFilter}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-          </div>
-
-          {/* SVG Line Chart */}
-          <div className="relative w-full h-48 pt-2">
-            
-            {/* Grid lines */}
-            <div className="absolute inset-0 flex flex-col justify-between text-[10px] font-mono text-slate-300 pointer-events-none">
-              <div className="border-b border-slate-100 w-full flex justify-between"><span>8h</span></div>
-              <div className="border-b border-slate-100 w-full flex justify-between"><span>6h</span></div>
-              <div className="border-b border-slate-100 w-full flex justify-between"><span>4h</span></div>
-              <div className="border-b border-slate-100 w-full flex justify-between"><span>2h</span></div>
-              <div className="border-b border-slate-100 w-full flex justify-between"><span>0h</span></div>
-            </div>
-
-            <svg viewBox="0 0 520 200" className="w-full h-full overflow-visible relative z-10">
-              <defs>
-                <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#635BFF" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#635BFF" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-
-              {/* Area fill */}
-              <path d={svgAreaD} fill="url(#purpleGradient)" />
-
-              {/* Line path */}
-              <path
-                d={svgPathD}
-                fill="none"
-                stroke="#635BFF"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-
-              {/* Data Dots */}
-              {chartPoints.map((pt, idx) => (
-                <g key={idx} className="group cursor-pointer">
-                  <circle
-                    cx={pt.x}
-                    cy={pt.y}
-                    r="5"
-                    className="fill-[#635BFF] stroke-white stroke-2 group-hover:r-7 transition-all"
-                  />
-                  {/* Tooltip on hover */}
-                  <text
-                    x={pt.x}
-                    y={pt.y - 12}
-                    textAnchor="middle"
-                    className="text-[10px] font-mono font-bold fill-[#635BFF] opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    {pt.val}h
-                  </text>
-                </g>
+                </tr>
               ))}
-            </svg>
-
-            {/* X-Axis Days */}
-            <div className="flex justify-between text-[11px] font-bold text-slate-400 mt-2 px-2">
-              {chartPoints.map(p => (
-                <span key={p.day}>{p.day}</span>
-              ))}
-            </div>
-
-          </div>
-        </div>
-
-        {/* Right Column: Today's Goal + Quick Actions + Quote - 3 Cols */}
-        <div className="lg:col-span-3 space-y-4">
-          
-          {/* Today's Goal */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-800">Today's Goal</h3>
-              <span className="text-xs font-mono font-bold text-slate-500">7 / 8 Hours</span>
-            </div>
-
-            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-              <div className="bg-[#635BFF] h-2 rounded-full" style={{ width: '87%' }} />
-            </div>
-
-            <p className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
-              <span>You're doing great! Keep it up!</span>
-              <span>🚀</span>
-            </p>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs space-y-3">
-            <h3 className="text-xs font-bold text-slate-800">Quick Actions</h3>
-
-            <div className="grid grid-cols-3 gap-2">
-              
-              <button
-                onClick={onOpenAddTask}
-                className="p-3 bg-purple-50 hover:bg-purple-100/80 rounded-2xl text-center space-y-1.5 transition-all group"
-              >
-                <div className="w-7 h-7 mx-auto rounded-xl bg-purple-100 text-[#635BFF] flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Plus className="w-4 h-4" />
-                </div>
-                <span className="text-[10px] font-bold text-slate-700 block">New Task</span>
-              </button>
-
-              <button
-                onClick={onOpenAddTask}
-                className="p-3 bg-emerald-50 hover:bg-emerald-100/80 rounded-2xl text-center space-y-1.5 transition-all group"
-              >
-                <div className="w-7 h-7 mx-auto rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <FolderPlus className="w-4 h-4" />
-                </div>
-                <span className="text-[10px] font-bold text-slate-700 block">New Project</span>
-              </button>
-
-              <button
-                onClick={() => activeTask && onToggleTimer(activeTask.id)}
-                className="p-3 bg-indigo-50 hover:bg-indigo-100/80 rounded-2xl text-center space-y-1.5 transition-all group"
-              >
-                <div className="w-7 h-7 mx-auto rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Clock className="w-4 h-4" />
-                </div>
-                <span className="text-[10px] font-bold text-slate-700 block">Start Timer</span>
-              </button>
-
-            </div>
-          </div>
-
-          {/* Quote Banner */}
-          <div className="p-5 rounded-3xl bg-indigo-50/60 border border-indigo-100/80 relative overflow-hidden space-y-2">
-            <span className="text-2xl font-serif text-[#635BFF] block leading-none">“</span>
-            <p className="text-xs font-semibold text-slate-700 leading-relaxed italic -mt-2">
-              Focus on progress, not perfection.
-            </p>
-            <span className="text-[10px] font-bold text-slate-400 block">— Unknown</span>
-          </div>
-
+            </tbody>
+          </table>
         </div>
 
       </div>
@@ -621,3 +571,4 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     </div>
   );
 };
+

@@ -178,28 +178,41 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div className="space-y-5">
               
               {/* Current Account Card */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-4">
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-12 h-12 rounded-2xl object-cover ring-2 ring-[#635BFF]/30"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-slate-900 truncate">{user.name}</h3>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-[#635BFF]">
-                      {user.accountType === 'OrgAdmin' ? 'Org Admin' : user.accountType === 'TeamMember' ? 'Team Member' : 'Individual'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                  
-                  {user.orgName && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold mt-1">
-                      <Building2 className="w-3.5 h-3.5 text-[#635BFF]" />
-                      <span>{user.orgName}</span>
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-12 h-12 rounded-2xl object-cover ring-2 ring-[#635BFF]/30"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-slate-900 truncate">{user.name}</h3>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-[#635BFF]">
+                        {user.accountType === 'OrgAdmin' ? 'Org Admin' : user.accountType === 'TeamMember' ? 'Team Member' : 'Individual'}
+                      </span>
                     </div>
-                  )}
+                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    
+                    {user.orgName && (
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold mt-1">
+                        <Building2 className="w-3.5 h-3.5 text-[#635BFF]" />
+                        <span>{user.orgName}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                <button
+                  onClick={() => {
+                    onUpdateUser({ ...user, isSignedIn: false });
+                    onClose();
+                  }}
+                  className="w-full py-2 px-3 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-extrabold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out of Workspace</span>
+                </button>
               </div>
 
               {/* Quick Preset Demo Login Switcher */}

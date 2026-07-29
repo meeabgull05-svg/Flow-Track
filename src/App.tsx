@@ -14,6 +14,7 @@ import { LandingPage } from './components/LandingPage';
 import { AddTaskModal } from './components/AddTaskModal';
 import { AiInsightsModal } from './components/AiInsightsModal';
 import { AuthModal } from './components/AuthModal';
+import { AuthScreen } from './components/AuthScreen';
 import { Task, Category, UserProfile, Organization, TeamMember } from './types';
 import { DEFAULT_CATEGORIES, generate1YearSampleTasks } from './utils/sampleData';
 
@@ -30,7 +31,7 @@ export default function App() {
     email: 'admin@apexacademy.edu',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
     role: 'School & Organization Admin',
-    isSignedIn: true,
+    isSignedIn: false, // Default to false so Login / Sign Up is the very first step
     accountType: 'OrgAdmin',
     orgId: 'org_apex_01',
     orgName: 'Apex Tech & Education Academy',
@@ -317,6 +318,11 @@ export default function App() {
     setActiveTimerTaskId(null);
   };
 
+  // Step 1 Gate: If user is not signed in, show mandatory Auth / Registration screen
+  if (!user.isSignedIn) {
+    return <AuthScreen onSignIn={(newUser) => setUser(newUser)} />;
+  }
+
   // If on landing page view, render full landing page
   if (currentTab === 'landing') {
     return (
@@ -338,8 +344,10 @@ export default function App() {
         isOpenMobile={isOpenMobileSidebar}
         onCloseMobile={() => setIsOpenMobileSidebar(false)}
         onOpenAiModal={() => setIsAiModalOpen(true)}
-        orgName={organization.name}
+        orgName={user.orgName || 'Northline Design'}
         isOrgAdmin={user.accountType === 'OrgAdmin' || user.orgRole === 'Admin'}
+        userName={user.name}
+        userAvatar={user.avatar}
       />
 
       {/* Main Content Area (Offset by 64px / lg:ml-64 for fixed sidebar) */}
