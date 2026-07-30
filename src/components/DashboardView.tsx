@@ -185,51 +185,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
 
-      {/* ---------- ACTIVE TIMER BAR ---------- */}
-      <div className="bg-[#15181D] text-white rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row items-stretch md:items-center gap-4 md:gap-6 relative overflow-hidden shadow-lg shadow-black/10">
-        
-        {/* Radial Ambient Blue Glow Background */}
-        <div className="absolute -right-16 -top-20 w-64 h-64 rounded-full bg-[#2E4CFF]/30 blur-3xl pointer-events-none" />
-
-        {/* Task Input Field */}
-        <div className="flex-1 relative z-10">
-          <input
-            type="text"
-            value={taskInputText}
-            onChange={(e) => setTaskInputText(e.target.value)}
-            placeholder="What are you working on?"
-            className="w-full bg-transparent border-none outline-none text-white font-sans text-base sm:text-lg font-medium placeholder-[#7A7F90] focus:ring-0 p-0"
-          />
-        </div>
-
-        {/* Tag Pill */}
-        <div className="relative z-10 flex items-center gap-2 bg-[#232733] px-3.5 py-2 rounded-full text-xs font-medium text-[#B6BAC9] border border-white/5 shrink-0 self-start md:self-auto">
-          <span className="w-2 h-2 rounded-xs bg-[#2E4CFF]" />
-          <span>{activeTask ? (activeTask.project_name || 'Client Website — Redesign') : 'Client Website — Redesign'}</span>
-        </div>
-
-        {/* Live Timer Clock */}
-        <div className="relative z-10 font-mono text-2xl sm:text-3xl font-bold text-white min-w-[130px] text-left md:text-right">
-          {formatTimerString(activeSeconds)}
-        </div>
-
-        {/* Pause / Play Button */}
-        <div className="relative z-10 shrink-0 flex justify-end">
-          <button
-            onClick={() => activeTask && onToggleTimer(activeTask.id)}
-            className="w-11 h-11 rounded-full bg-[#2E4CFF] hover:bg-[#1B2FBF] text-white flex items-center justify-center cursor-pointer shadow-lg shadow-[#2E4CFF]/35 transition-all transform hover:scale-105 active:scale-95"
-            title={activeTimerTaskId === activeTask?.id ? "Pause timer" : "Start timer"}
-          >
-            {activeTimerTaskId === activeTask?.id ? (
-              <Pause className="w-5 h-5 fill-current" />
-            ) : (
-              <Play className="w-5 h-5 fill-current ml-0.5" />
-            )}
-          </button>
-        </div>
-
-      </div>
-
 
       {/* ---------- STAT CARDS (4 CARDS) ---------- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -35,7 +35,11 @@ import {
   FileText,
   Layers,
   Check,
-  ExternalLink
+  ExternalLink,
+  Rocket,
+  Code2,
+  Headphones,
+  MessageSquare
 } from 'lucide-react';
 import { UserProfile, AccountType, OrgType } from '../types';
 
@@ -213,20 +217,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
     <div className="min-h-screen bg-white text-slate-800 flex flex-col justify-between selection:bg-[#3C83F6] selection:text-white font-sans scroll-smooth">
       
       {/* Top Website Navigation Header */}
-      <header className="border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 lg:px-10 py-3 flex items-center justify-between shadow-2xs">
+      <header className="border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 lg:px-10 py-2.5 flex items-center justify-between shadow-2xs">
         <div className="flex items-center gap-6 lg:gap-8 min-w-0">
           <div className="flex items-center gap-2.5 cursor-pointer shrink-0" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-9 h-9 rounded-xl bg-[#3C83F6] flex items-center justify-center text-white shadow-md shadow-[#3C83F6]/25 font-black text-lg shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[#3C83F6] flex items-center justify-center text-white shadow-md shadow-[#3C83F6]/25 font-black text-base shrink-0">
               F
             </div>
             <div className="flex flex-col justify-center">
-              <div className="text-sm sm:text-base font-black text-slate-900 tracking-tight flex items-center gap-1.5 whitespace-nowrap leading-none">
+              <div className="text-xs sm:text-sm font-black text-slate-900 tracking-tight flex items-center gap-1.5 whitespace-nowrap leading-none">
                 <span>FlowTrack</span>
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-blue-50 text-[#3C83F6] border border-blue-200/80">
+                <span className="px-1.5 py-0.5 rounded text-[8.5px] font-mono font-bold bg-blue-50 text-[#3C83F6] border border-blue-200/80">
                   PRO
                 </span>
               </div>
-              <div className="text-[10px] text-slate-500 font-medium whitespace-nowrap mt-0.5">
+              <div className="text-[9.5px] text-slate-500 font-medium whitespace-nowrap mt-0.5">
                 Work & Time Engine
               </div>
             </div>
@@ -259,13 +263,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 whitespace-nowrap">
           <button
             onClick={() => openAuthModal('login')}
-            className="px-3.5 py-2 rounded-xl text-xs font-extrabold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer whitespace-nowrap"
+            className="px-3 py-1.5 rounded-xl text-xs font-extrabold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer whitespace-nowrap"
           >
             Sign In
           </button>
           <button
             onClick={() => openAuthModal('signup')}
-            className="px-4 py-2 rounded-xl text-xs font-extrabold bg-[#3C83F6] hover:bg-[#2563eb] text-white transition-all cursor-pointer shadow-md shadow-[#3C83F6]/20 flex items-center gap-1.5 whitespace-nowrap"
+            className="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-[#3C83F6] hover:bg-[#2563eb] text-white transition-all cursor-pointer shadow-md shadow-[#3C83F6]/20 flex items-center gap-1.5 whitespace-nowrap"
           >
             <Building2 className="w-3.5 h-3.5" />
             <span>Register Organization</span>
@@ -274,474 +278,288 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
       </header>
 
       {/* Hero Section */}
-      <section id="home" className="relative pt-6 pb-8 px-5 sm:px-8 lg:px-10 max-w-7xl mx-auto w-full bg-gradient-to-b from-blue-50/50 via-white to-white rounded-3xl my-2 border border-blue-100/60 shadow-xs">
+      <section id="home" className="relative pt-4 pb-5 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full bg-gradient-to-b from-blue-50/50 via-white to-white rounded-2xl sm:rounded-3xl my-1 border border-blue-100/60 shadow-xs">
         
         {/* Left Aligned Content Grid */}
         {/* Equal 6-6 Grid for Left & Right Divs */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center text-left">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-stretch text-left">
           
-          <div className="lg:col-span-6 space-y-4">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-[#3C83F6] text-xs font-extrabold shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-              <span>Organization & School Work Management Engine</span>
-            </span>
+          {/* Left Div: Content & Stats Card */}
+          <div className="lg:col-span-6 flex flex-col justify-between space-y-3.5 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs h-full">
+            <div className="space-y-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[#3C83F6] text-[11px] font-extrabold shadow-xs">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <span>Organization & School Work Management Engine</span>
+              </span>
 
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 leading-tight tracking-tight">
-              Manage School, Team & Work Stopwatches <span className="text-[#3C83F6] underline decoration-blue-200 underline-offset-4">In One Hub</span>
-            </h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 leading-tight tracking-tight">
+                Manage School, Team & Work Stopwatches <span className="text-[#3C83F6] underline decoration-blue-200 underline-offset-4">In One Hub</span>
+              </h1>
 
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-xl">
-              Assign tasks to teachers, students, or engineers, track active time logs with real-time stopwatches, and monitor team productivity with automated analytics.
-            </p>
+              <p className="text-xs text-slate-600 leading-relaxed font-medium max-w-xl">
+                Assign tasks to teachers, students, or engineers, track active time logs with real-time stopwatches, and monitor team productivity with automated analytics.
+              </p>
 
-            {/* CTAs inside Hero */}
-            <div className="flex flex-wrap items-center gap-2.5 pt-1">
-              <button
-                onClick={() => openAuthModal('signup')}
-                className="px-5 py-2.5 bg-[#3C83F6] hover:bg-[#2563eb] text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer shadow-md shadow-[#3C83F6]/20 flex items-center gap-1.5"
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Register Organization</span>
-                <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
-              </button>
-              <button
-                onClick={() => openAuthModal('login')}
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-xl transition-all cursor-pointer border border-slate-200/80 flex items-center gap-1.5"
-              >
-                <UserCheck className="w-3.5 h-3.5 text-[#3C83F6]" />
-                <span>Sign In</span>
-              </button>
-            </div>
-
-            {/* Stat Cards - Clean left-aligned highlights */}
-            <div className="pt-1 grid grid-cols-3 gap-2.5 max-w-lg">
-              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-                <div className="text-base font-black text-[#3C83F6]">1,200+</div>
-                <div className="text-[10px] font-bold text-slate-500 leading-none mt-0.5">Active Workspaces</div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-                <div className="text-base font-black text-emerald-600">99.9%</div>
-                <div className="text-[10px] font-bold text-slate-500 leading-none mt-0.5">Stopwatch Sync</div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-                <div className="text-base font-black text-slate-900">100% Free</div>
-                <div className="text-[10px] font-bold text-slate-500 leading-none mt-0.5">Instant Access</div>
+              {/* CTAs inside Hero */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
+                <button
+                  onClick={() => openAuthModal('signup')}
+                  className="px-4 py-2.5 bg-[#3C83F6] hover:bg-[#2563eb] text-white font-extrabold text-xs rounded-xl transition-all duration-200 cursor-pointer shadow-md shadow-[#3C83F6]/25 hover:shadow-lg hover:shadow-[#3C83F6]/35 flex items-center gap-2 group/btn"
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Register Organization</span>
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5" />
+                </button>
+                <button
+                  onClick={() => openAuthModal('login')}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-xl transition-all duration-200 cursor-pointer border border-slate-200/90 flex items-center gap-2"
+                >
+                  <UserCheck className="w-3.5 h-3.5 text-[#3C83F6]" />
+                  <span>Sign In</span>
+                </button>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-500 font-medium pt-0.5">
-              <span className="flex items-center gap-1">
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> No credit card required
-              </span>
-              <span className="flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#3C83F6] shrink-0" /> Encrypted Security
-              </span>
-              <span className="flex items-center gap-1">
-                <Globe className="w-3.5 h-3.5 text-blue-500 shrink-0" /> Real-time Cloud Sync
-              </span>
+            {/* Clean White Stats & Trust Metrics Card */}
+            <div className="pt-3 border-t border-slate-100 space-y-2">
+              
+              {/* Stat Cards - 3 Columns */}
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/70 shadow-2xs hover:bg-blue-50/40 transition-colors text-left">
+                  <div className="text-sm sm:text-base font-black text-[#3C83F6]">1,200+</div>
+                  <div className="text-[9.5px] font-bold text-slate-500 leading-none mt-1">Active Workspaces</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/70 shadow-2xs hover:bg-emerald-50/40 transition-colors text-left">
+                  <div className="text-sm sm:text-base font-black text-emerald-600">99.9%</div>
+                  <div className="text-[9.5px] font-bold text-slate-500 leading-none mt-1">Stopwatch Sync</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/70 shadow-2xs hover:bg-purple-50/40 transition-colors text-left">
+                  <div className="text-sm sm:text-base font-black text-slate-900">100% Free</div>
+                  <div className="text-[9.5px] font-bold text-slate-500 leading-none mt-1">Instant Access</div>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          {/* Right Div: Balanced Equal 6-Column Dashboard Showcase Frame with Image */}
-          <div className="lg:col-span-6 relative group">
+          {/* Right Div: Clean White Dashboard Showcase Card with Image */}
+          <div className="lg:col-span-6 flex flex-col justify-between bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs h-full relative overflow-hidden group">
             
-            {/* Soft Ambient Glow Behind Image */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-3xl blur-xl transition-all group-hover:blur-2xl" />
-
-            <div className="relative bg-white rounded-3xl p-3 sm:p-4 border border-blue-100 shadow-xl shadow-blue-500/10 space-y-3 overflow-hidden">
-              
-              {/* Header Bar */}
-              <div className="flex items-center justify-between px-2 pt-1 pb-2 border-b border-slate-100 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-rose-400 inline-block" />
-                    <span className="w-3 h-3 rounded-full bg-amber-400 inline-block" />
-                    <span className="w-3 h-3 rounded-full bg-emerald-400 inline-block" />
-                  </div>
-                  <span className="text-[11px] font-bold text-slate-600 font-mono ml-2">flowtrack.app/dashboard</span>
+            {/* Top Browser Header Bar */}
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 text-[10.5px] shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
                 </div>
-                
-                <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-emerald-600 animate-spin" /> Live Syncing
+                <span className="text-[10.5px] font-bold text-slate-600 font-mono ml-2">flowtrack.app/dashboard</span>
+              </div>
+              
+              <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                <Clock className="w-3 h-3 text-emerald-600 animate-spin" /> Live Syncing
+              </span>
+            </div>
+
+            {/* Main Dashboard Image Showcase */}
+            <div className="relative rounded-xl overflow-hidden border border-slate-200/80 shadow-xs group/img flex-1 w-full min-h-[180px] sm:min-h-[200px] max-h-[210px] sm:max-h-[225px]">
+              <img
+                src={heroDashboardImg}
+                alt="FlowTrack Live Workspace Dashboard Preview"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover object-top rounded-xl transform transition-transform duration-500 group-hover/img:scale-[1.02]"
+              />
+
+              {/* Overlay Floating Live Status Badge */}
+              <div className="absolute bottom-2 left-2 right-2 bg-slate-900/85 backdrop-blur-md text-white p-2 rounded-lg border border-white/20 flex items-center justify-between shadow-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <div>
+                    <div className="text-[11px] font-black">14 Active Team Stopwatches</div>
+                    <div className="text-[9.5px] text-slate-300 font-medium">Real-time Faculty & Student Sync</div>
+                  </div>
+                </div>
+                <span className="text-[10.5px] font-mono font-bold text-amber-300 bg-white/10 px-2 py-0.5 rounded-md border border-white/10">
+                  01:42:18
                 </span>
               </div>
-
-              {/* Main Image Banner */}
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200/80 shadow-inner group/img">
-                <img
-                  src={heroDashboardImg}
-                  alt="FlowTrack Live Workspace Dashboard Preview"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-auto object-cover rounded-2xl transform transition-transform duration-500 group-hover/img:scale-[1.02]"
-                />
-
-                {/* Overlay Floating Live Status Badge */}
-                <div className="absolute bottom-3 left-3 right-3 bg-slate-900/85 backdrop-blur-md text-white p-3 rounded-xl border border-white/20 flex items-center justify-between shadow-lg">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                    <div>
-                      <div className="text-xs font-black">14 Active Team Stopwatches</div>
-                      <div className="text-[10px] text-slate-300 font-medium">Real-time Faculty & Student Sync</div>
-                    </div>
-                  </div>
-                  <span className="text-xs font-mono font-bold text-amber-300 bg-white/10 px-2.5 py-1 rounded-lg border border-white/10">
-                    01:42:18
-                  </span>
-                </div>
-              </div>
-
-              {/* Quick Role Switcher Buttons below image */}
-              <div className="pt-1 space-y-1.5">
-                <div className="text-[10px] font-bold text-slate-500 flex items-center justify-between">
-                  <span className="flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500" />
-                    <span>Instant Workspace Role Previews:</span>
-                  </span>
-                  <span className="text-[10px] text-[#3C83F6] font-semibold">Click to test workspace</span>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => handleDemoLogin('admin')}
-                    className="py-2 px-2.5 bg-slate-50 hover:bg-blue-50 hover:text-[#3C83F6] hover:border-blue-200 text-slate-800 font-extrabold text-[11px] rounded-xl border border-slate-200/80 transition-all cursor-pointer text-center flex items-center justify-center gap-1 shadow-2xs"
-                  >
-                    <span>⚡ Admin</span>
-                  </button>
-                  <button
-                    onClick={() => handleDemoLogin('member')}
-                    className="py-2 px-2.5 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 text-slate-800 font-extrabold text-[11px] rounded-xl border border-slate-200/80 transition-all cursor-pointer text-center flex items-center justify-center gap-1 shadow-2xs"
-                  >
-                    <span>💻 Member</span>
-                  </button>
-                  <button
-                    onClick={() => handleDemoLogin('guest')}
-                    className="py-2 px-2.5 bg-slate-50 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200 text-slate-800 font-extrabold text-[11px] rounded-xl border border-slate-200/80 transition-all cursor-pointer text-center flex items-center justify-center gap-1 shadow-2xs"
-                  >
-                    <span>🎓 Guest</span>
-                  </button>
-                </div>
-              </div>
-
             </div>
 
           </div>
 
         </div>
 
-        {/* Interactive Live Preview Showcase */}
-        <div className="pt-6 max-w-5xl mx-auto">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-2xl space-y-6 text-left">
-            
-            {/* Tab Header */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#3C83F6] flex items-center justify-center font-bold">
-                  <Building2 className="w-5 h-5" />
+        {/* Platform Feature Pillars Banner Box (Matching Reference Image) */}
+        <div className="pt-8 max-w-7xl mx-auto">
+          <div className="bg-white rounded-[28px] sm:rounded-[32px] p-3 sm:p-5 lg:p-6 border border-slate-200/80 shadow-xl shadow-slate-200/30">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-left">
+              
+              {/* Feature 1: Live Time Tracking */}
+              <div className="flex items-center gap-3.5 p-3.5 sm:p-4 rounded-2xl transition-all duration-300 hover:bg-[#3C83F6] group cursor-pointer border border-transparent hover:border-[#3C83F6] hover:shadow-lg hover:shadow-[#3C83F6]/20">
+                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#DCE7FF] group-hover:bg-white/20 text-[#2563EB] group-hover:text-white flex items-center justify-center shrink-0 transition-colors duration-300">
+                  <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-slate-900">Apex Tech & Education Academy</h3>
-                  <p className="text-xs text-slate-500 font-medium">Active Organization Workspace • Code: APEX-8921</p>
+                <div className="space-y-0.5">
+                  <h3 className="text-sm font-black text-slate-900 group-hover:text-white transition-colors duration-300 leading-tight">
+                    Live Time Tracking
+                  </h3>
+                  <p className="text-[11.5px] text-slate-500 group-hover:text-blue-50 font-medium leading-snug transition-colors duration-300">
+                    Precision stopwatches with real-time cloud sync for teams and students.
+                  </p>
                 </div>
               </div>
 
-              {/* Preview Tab Selector */}
-              <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/80 text-xs font-extrabold">
-                <button
-                  onClick={() => setPreviewTab('admin')}
-                  className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${
-                    previewTab === 'admin' ? 'bg-white text-[#3C83F6] shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Admin View
-                </button>
-                <button
-                  onClick={() => setPreviewTab('member')}
-                  className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${
-                    previewTab === 'member' ? 'bg-white text-[#3C83F6] shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Member View
-                </button>
-                <button
-                  onClick={() => setPreviewTab('analytics')}
-                  className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${
-                    previewTab === 'analytics' ? 'bg-white text-[#3C83F6] shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Analytics Tab
-                </button>
+              {/* Feature 2: Smart Task Auditing */}
+              <div className="flex items-center gap-3.5 p-3.5 sm:p-4 rounded-2xl transition-all duration-300 hover:bg-[#3C83F6] group cursor-pointer border border-transparent hover:border-[#3C83F6] hover:shadow-lg hover:shadow-[#3C83F6]/20">
+                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#DCE7FF] group-hover:bg-white/20 text-[#2563EB] group-hover:text-white flex items-center justify-center shrink-0 transition-colors duration-300">
+                  <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7" />
+                </div>
+                <div className="space-y-0.5">
+                  <h3 className="text-sm font-black text-slate-900 group-hover:text-white transition-colors duration-300 leading-tight">
+                    Smart Task Auditing
+                  </h3>
+                  <p className="text-[11.5px] text-slate-500 group-hover:text-blue-50 font-medium leading-snug transition-colors duration-300">
+                    Automated 365-day productivity heatmaps, member logs & CSV exports.
+                  </p>
+                </div>
               </div>
+
+              {/* Feature 3: Secure & Reliable */}
+              <div className="flex items-center gap-3.5 p-3.5 sm:p-4 rounded-2xl transition-all duration-300 hover:bg-[#3C83F6] group cursor-pointer border border-transparent hover:border-[#3C83F6] hover:shadow-lg hover:shadow-[#3C83F6]/20">
+                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#DCE7FF] group-hover:bg-white/20 text-[#2563EB] group-hover:text-white flex items-center justify-center shrink-0 transition-colors duration-300">
+                  <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7" />
+                </div>
+                <div className="space-y-0.5">
+                  <h3 className="text-sm font-black text-slate-900 group-hover:text-white transition-colors duration-300 leading-tight">
+                    Secure & Reliable
+                  </h3>
+                  <p className="text-[11.5px] text-slate-500 group-hover:text-blue-50 font-medium leading-snug transition-colors duration-300">
+                    Enterprise-grade security and performance at the core of FlowTrack.
+                  </p>
+                </div>
+              </div>
+
+              {/* Feature 4: 24/7 Support */}
+              <div className="flex items-center gap-3.5 p-3.5 sm:p-4 rounded-2xl transition-all duration-300 hover:bg-[#3C83F6] group cursor-pointer border border-transparent hover:border-[#3C83F6] hover:shadow-lg hover:shadow-[#3C83F6]/20">
+                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#DCE7FF] group-hover:bg-white/20 text-[#2563EB] group-hover:text-white flex items-center justify-center shrink-0 transition-colors duration-300">
+                  <Headphones className="w-6 h-6 sm:w-7 sm:h-7" />
+                </div>
+                <div className="space-y-0.5">
+                  <h3 className="text-sm font-black text-slate-900 group-hover:text-white transition-colors duration-300 leading-tight">
+                    24/7 Support
+                  </h3>
+                  <p className="text-[11.5px] text-slate-500 group-hover:text-blue-50 font-medium leading-snug transition-colors duration-300">
+                    We're always here to support your workspace anytime, anywhere.
+                  </p>
+                </div>
+              </div>
+
             </div>
-
-            {/* Dynamic Content Preview Based on Tab */}
-            {previewTab === 'admin' && (
-              <div className="space-y-4 animate-in fade-in duration-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-slate-800">Live Team Stopwatches & Active Assignments</span>
-                  <span className="text-xs text-emerald-600 font-extrabold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>3 Stopwatches Active</span>
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2">
-                    <div className="flex justify-between text-[11px] font-bold text-slate-500">
-                      <span>Meeab Gull (Principal)</span>
-                      <span className="text-emerald-600 font-extrabold">Online</span>
-                    </div>
-                    <div className="text-xs font-black text-slate-900 truncate">Reviewing Curriculum & Team Reports</div>
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-xs font-mono font-extrabold text-[#3C83F6]">04:07:00</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-700">Tracking</span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2">
-                    <div className="flex justify-between text-[11px] font-bold text-slate-500">
-                      <span>Sarah Khan (UI Designer)</span>
-                      <span className="text-emerald-600 font-extrabold">Online</span>
-                    </div>
-                    <div className="text-xs font-black text-slate-900 truncate">Designing Student Portal Dashboard</div>
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-xs font-mono font-extrabold text-[#3C83F6]">05:06:00</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-700">Tracking</span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2">
-                    <div className="flex justify-between text-[11px] font-bold text-slate-500">
-                      <span>Professor Usman (Faculty)</span>
-                      <span className="text-amber-600 font-extrabold">On Break</span>
-                    </div>
-                    <div className="text-xs font-black text-slate-900 truncate">Grading Midterm CS Papers</div>
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-xs font-mono font-extrabold text-[#3C83F6]">03:06:00</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-700">Paused</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {previewTab === 'member' && (
-              <div className="space-y-4 animate-in fade-in duration-200">
-                <div className="text-xs font-black text-slate-800">Assigned Tasks for Team Member (Sarah Khan)</div>
-                <div className="space-y-2">
-                  <div className="p-3.5 bg-blue-50/50 border border-blue-200/60 rounded-xl flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-bold text-slate-900">Finalize Responsive Layout for School Website</div>
-                      <div className="text-[11px] text-slate-500">Assigned by Meeab Gull • Priority: High</div>
-                    </div>
-                    <button onClick={() => handleDemoLogin('member')} className="px-3 py-1.5 bg-[#3C83F6] text-white rounded-lg text-xs font-bold cursor-pointer hover:bg-[#2563eb]">
-                      Start Stopwatch
-                    </button>
-                  </div>
-
-                  <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-bold text-slate-900">Prepare Weekly Design Presentation</div>
-                      <div className="text-[11px] text-slate-500">Assigned by Admin • Priority: Medium</div>
-                    </div>
-                    <span className="text-xs text-slate-500 font-medium">Pending</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {previewTab === 'analytics' && (
-              <div className="space-y-4 animate-in fade-in duration-200">
-                <div className="text-xs font-black text-slate-800">Organization Performance Overview</div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-center">
-                    <div className="text-lg font-black text-[#3C83F6]">128.5 hrs</div>
-                    <div className="text-[10px] font-bold text-slate-500">Total Hours Logged</div>
-                  </div>
-                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
-                    <div className="text-lg font-black text-emerald-600">96%</div>
-                    <div className="text-[10px] font-bold text-slate-500">Task Completion Rate</div>
-                  </div>
-                  <div className="p-3 bg-sky-50 rounded-xl border border-sky-100 text-center">
-                    <div className="text-lg font-black text-sky-600">8 Members</div>
-                    <div className="text-[10px] font-bold text-slate-500">Active Workspace</div>
-                  </div>
-                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-center">
-                    <div className="text-lg font-black text-amber-600">14 Tasks</div>
-                    <div className="text-[10px] font-bold text-slate-500">Completed This Week</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
           </div>
         </div>
 
       </section>
 
-      {/* Interactive Live Stopwatch & Workflow Section (White Light Theme) */}
-      <section id="stopwatch" className="py-20 px-6 lg:px-12 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/80 border-t border-slate-200/80">
+      {/* How It Works in 3 Steps Section */}
+      <section id="workflow" className="py-20 px-6 lg:px-12 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/80 border-t border-slate-200/80">
         <div className="max-w-7xl mx-auto space-y-12">
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <span className="px-3.5 py-1.5 rounded-full bg-blue-50 text-[#3C83F6] border border-blue-200/80 text-xs font-extrabold shadow-xs">
-              LIVE INTERACTIVE DEMO & WORKFLOW
+              SIMPLE & EFFORTLESS WORKFLOW
             </span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              Test Our Precision Stopwatch Engine
+              How FlowTrack Works In 3 Steps
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 font-medium">
-              Experience zero-latency task timing. Start, pause, or record laps right here in your browser.
+              Set up your workspace, assign stopwatches to your team, and track real-time productivity with zero learning curve.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
+          {/* 3 Step Equal Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
             
-            {/* Left Side: 3-Step Simple Workflow Cards */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="text-xs font-black text-slate-800 uppercase tracking-wide">How It Works in 3 Steps</div>
-
-              <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-start gap-3.5">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#3C83F6] font-black text-xs flex items-center justify-center shrink-0 border border-blue-100">
-                  1
+            {/* Step 1 */}
+            <div className="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-xl hover:shadow-[#3C83F6]/20 hover:bg-[#3C83F6] hover:border-[#3C83F6] transition-all duration-300 space-y-4 flex flex-col justify-between relative group cursor-pointer">
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-blue-50 group-hover:bg-white/20 border border-blue-100 group-hover:border-white/30 text-[#3C83F6] group-hover:text-white font-mono font-black text-xs transition-colors duration-300">
+                    STEP 01
+                  </span>
+                  <Building2 className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors duration-300" />
                 </div>
-                <div className="space-y-1">
-                  <div className="text-xs font-extrabold text-slate-900">Create Your Organization</div>
-                  <div className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Set up your school, company, or team hub in 10 seconds. Invite members via code or email.
-                  </div>
-                </div>
+                <h3 className="text-base font-black text-slate-900 group-hover:text-white leading-snug transition-colors duration-300">
+                  Create Your Organization
+                </h3>
+                <p className="text-xs text-slate-600 group-hover:text-blue-50 leading-relaxed font-medium transition-colors duration-300">
+                  Set up your school, company, or team hub in under 10 seconds. Easily invite members via join code, email, or role links.
+                </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-start gap-3.5">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#3C83F6] font-black text-xs flex items-center justify-center shrink-0 border border-blue-100">
-                  2
+              <div className="p-3.5 rounded-2xl bg-slate-50 group-hover:bg-white/15 border border-slate-100 group-hover:border-white/20 space-y-1 transition-colors duration-300">
+                <div className="text-[11px] font-bold text-slate-800 group-hover:text-white flex items-center gap-1.5 transition-colors duration-300">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500 group-hover:text-white transition-colors duration-300" />
+                  Instant Workspace Setup
                 </div>
-                <div className="space-y-1">
-                  <div className="text-xs font-extrabold text-slate-900">Assign Tasks & Start Stopwatch</div>
-                  <div className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Assign work to teachers, engineers, or students with priority badges and real-time timers.
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-start gap-3.5">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#3C83F6] font-black text-xs flex items-center justify-center shrink-0 border border-blue-100">
-                  3
-                </div>
-                <div className="space-y-1">
-                  <div className="text-xs font-extrabold text-slate-900">Review 365-Day Productivity Logs</div>
-                  <div className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Track total hours, view contribution heatmaps, and export CSV reports for payroll or grading.
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/80 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800">Ready to start?</span>
-                <button
-                  onClick={() => openAuthModal('signup')}
-                  className="px-4 py-2 bg-[#3C83F6] hover:bg-[#2563eb] text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer shadow-xs"
-                >
-                  Register Workspace →
-                </button>
+                <div className="text-[10px] text-slate-500 group-hover:text-blue-100 transition-colors duration-300">Includes role-based access for Admins & Members</div>
               </div>
             </div>
 
-            {/* Right Side: Clean White Interactive Stopwatch Card */}
-            <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
-              
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-extrabold text-slate-800">Live Browser Stopwatch</span>
+            {/* Step 2 */}
+            <div className="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-xl hover:shadow-[#3C83F6]/20 hover:bg-[#3C83F6] hover:border-[#3C83F6] transition-all duration-300 space-y-4 flex flex-col justify-between relative group cursor-pointer">
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-blue-50 group-hover:bg-white/20 border border-blue-100 group-hover:border-white/30 text-[#3C83F6] group-hover:text-white font-mono font-black text-xs transition-colors duration-300">
+                    STEP 02
+                  </span>
+                  <Clock className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors duration-300" />
                 </div>
-                <span className="text-[10px] text-slate-500 font-bold bg-slate-100 px-2.5 py-1 rounded-full">
-                  Interactive Widget
-                </span>
+                <h3 className="text-base font-black text-slate-900 group-hover:text-white leading-snug transition-colors duration-300">
+                  Assign Tasks & Start Stopwatch
+                </h3>
+                <p className="text-xs text-slate-600 group-hover:text-blue-50 leading-relaxed font-medium transition-colors duration-300">
+                  Assign tasks to teachers, engineers, or students. Members log hours using precision live stopwatches with live status tags.
+                </p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 block">Active Task Title:</label>
-                <input
-                  type="text"
-                  value={demoTask}
-                  onChange={(e) => setDemoTask(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:border-[#3C83F6] focus:outline-none transition-all"
-                />
-              </div>
-
-              {/* Main Timer Display in Light Mode */}
-              <div className="py-6 bg-gradient-to-b from-blue-50/80 to-blue-50/30 rounded-2xl border border-blue-100/90 text-center space-y-1">
-                <div className="text-4xl sm:text-6xl font-mono font-black tracking-widest text-[#3C83F6]">
-                  {formatDemoTime(demoTime)}
+              <div className="p-3.5 rounded-2xl bg-slate-50 group-hover:bg-white/15 border border-slate-100 group-hover:border-white/20 space-y-1 transition-colors duration-300">
+                <div className="text-[11px] font-bold text-slate-800 group-hover:text-white flex items-center gap-1.5 transition-colors duration-300">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500 group-hover:text-white transition-colors duration-300" />
+                  Real-time Cloud Sync
                 </div>
-                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                  {isDemoRunning ? 'Stopwatch Active • Recording Time' : 'Stopwatch Paused'}
+                <div className="text-[10px] text-slate-500 group-hover:text-blue-100 transition-colors duration-300">Live stopwatch status updates for all team admins</div>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-xl hover:shadow-[#3C83F6]/20 hover:bg-[#3C83F6] hover:border-[#3C83F6] transition-all duration-300 space-y-4 flex flex-col justify-between relative group cursor-pointer">
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-blue-50 group-hover:bg-white/20 border border-blue-100 group-hover:border-white/30 text-[#3C83F6] group-hover:text-white font-mono font-black text-xs transition-colors duration-300">
+                    STEP 03
+                  </span>
+                  <BarChart3 className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors duration-300" />
                 </div>
+                <h3 className="text-base font-black text-slate-900 group-hover:text-white leading-snug transition-colors duration-300">
+                  Review 365-Day Productivity Logs
+                </h3>
+                <p className="text-xs text-slate-600 group-hover:text-blue-50 leading-relaxed font-medium transition-colors duration-300">
+                  Track total hours, view activity contribution heatmaps, generate PDF reports, and export clean CSV data for payroll or grading.
+                </p>
               </div>
 
-              {/* Stopwatch Control Buttons */}
-              <div className="flex items-center justify-center gap-2.5">
-                <button
-                  onClick={() => setIsDemoRunning(!isDemoRunning)}
-                  className={`px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-sm ${
-                    isDemoRunning 
-                      ? 'bg-amber-500 hover:bg-amber-600 text-slate-950' 
-                      : 'bg-[#3C83F6] hover:bg-[#2563eb] text-white shadow-[#3C83F6]/20'
-                  }`}
-                >
-                  {isDemoRunning ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                  <span>{isDemoRunning ? 'Pause Timer' : 'Start Timer'}</span>
-                </button>
-
-                <button
-                  onClick={handleDemoLap}
-                  disabled={!isDemoRunning}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-800 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-slate-200"
-                >
-                  <Flag className="w-3.5 h-3.5 text-slate-600" />
-                  <span>Lap</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setIsDemoRunning(false);
-                    setDemoTime(0);
-                    setDemoLaps([]);
-                  }}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-slate-200"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Reset</span>
-                </button>
-              </div>
-
-              {/* Lap Records */}
-              {demoLaps.length > 0 && (
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs font-mono text-slate-800 max-h-28 overflow-y-auto">
-                  <div className="text-[10px] font-sans font-bold text-slate-500 uppercase">Logged Laps:</div>
-                  {demoLaps.map((lap, i) => (
-                    <div key={i} className="flex justify-between border-b border-slate-200/80 pb-1 last:border-0">
-                      <span>{lap}</span>
-                      <span className="text-[#3C83F6] font-bold">Lap {demoLaps.length - i}</span>
-                    </div>
-                  ))}
+              <div className="p-3.5 rounded-2xl bg-slate-50 group-hover:bg-white/15 border border-slate-100 group-hover:border-white/20 space-y-1 transition-colors duration-300">
+                <div className="text-[11px] font-bold text-slate-800 group-hover:text-white flex items-center gap-1.5 transition-colors duration-300">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500 group-hover:text-white transition-colors duration-300" />
+                  Automated Analytics
                 </div>
-              )}
-
-              <div className="pt-1 text-center">
-                <button
-                  onClick={() => handleDemoLogin('admin')}
-                  className="text-xs text-[#3C83F6] hover:underline font-extrabold cursor-pointer inline-flex items-center gap-1"
-                >
-                  <span>Launch full admin dashboard with pre-filled mock data</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="text-[10px] text-slate-500 group-hover:text-blue-100 transition-colors duration-300">Detailed graphs & exports ready for export</div>
               </div>
-
             </div>
 
           </div>
+
+
 
         </div>
       </section>
@@ -924,88 +742,81 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
         </div>
       </section>
 
-      {/* Analytics & Performance Preview Section */}
-      <section id="analytics" className="py-20 px-6 lg:px-12 bg-white border-t border-slate-200/80">
-        <div className="max-w-7xl mx-auto space-y-12">
+      {/* Complete Productivity & Workflow Capabilities Section */}
+      <section id="capabilities" className="py-12 px-6 lg:px-12 bg-white border-t border-slate-200/80">
+        <div className="max-w-7xl mx-auto">
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
-            <div className="space-y-6">
-              <span className="text-xs font-extrabold text-[#3C83F6] bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200/60">
-                REAL-TIME INSIGHTS
-              </span>
-              <h2 className="text-3xl sm:text-5xl font-black text-slate-900 leading-tight">
-                Clear Analytics for Team Productivity & Task Auditing
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                No more guessing who worked on what. FlowTrack automatically aggregates active stopwatch sessions into visual charts, member logs, and exported spreadsheets.
-              </p>
+            {/* Left Column: Headline, Description & Features List */}
+            <div className="lg:col-span-6 space-y-6 text-left">
+              
+              <div className="space-y-3">
+                <span className="text-[10px] font-extrabold text-[#3C83F6] bg-blue-50 px-3 py-1 rounded-full border border-blue-200/60 tracking-wider inline-block">
+                  ALL-IN-ONE WORKSPACE
+                </span>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-snug">
+                  Everything You Need to Master Your Daily Workflow
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+                  FlowTrack combines precision time tracking, project scheduling, and automated team insights into a clean, distraction-free environment.
+                </p>
+              </div>
 
-              <div className="space-y-3 pt-2">
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3.5">
-                  <TrendingUp className="w-5 h-5 text-[#3C83F6] mt-0.5" />
-                  <div>
-                    <h4 className="text-xs font-extrabold text-slate-900">Total Hours Logged vs Capacity</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Track weekly team hours and compare against assigned task benchmarks.</p>
+              {/* 4 Feature Items */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70 space-y-1.5 hover:bg-blue-50/40 hover:border-blue-200 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#3C83F6] flex items-center justify-center shrink-0">
+                    <Clock className="w-4 h-4" />
                   </div>
+                  <h4 className="text-xs font-extrabold text-slate-900">Precision Stopwatch</h4>
+                  <p className="text-[10.5px] text-slate-500 font-medium leading-normal">
+                    Start, pause, and log active work sessions with live sync across your workspace.
+                  </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3.5">
-                  <Award className="w-5 h-5 text-emerald-600 mt-0.5" />
-                  <div>
-                    <h4 className="text-xs font-extrabold text-slate-900">Active Daily Streaks</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Encourage daily work discipline with automated activity badges.</p>
+                <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70 space-y-1.5 hover:bg-purple-50/40 hover:border-purple-200 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 text-[#635BFF] flex items-center justify-center shrink-0">
+                    <Layers className="w-4 h-4" />
                   </div>
+                  <h4 className="text-xs font-extrabold text-slate-900">Smart Projects</h4>
+                  <p className="text-[10.5px] text-slate-500 font-medium leading-normal">
+                    Organize tasks by client, project category, and priority level effortlessly.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70 space-y-1.5 hover:bg-emerald-50/40 hover:border-emerald-200 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-extrabold text-slate-900">Audit-Ready Exports</h4>
+                  <p className="text-[10.5px] text-slate-500 font-medium leading-normal">
+                    Generate instant PDF and CSV summaries formatted for organization audits.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70 space-y-1.5 hover:bg-amber-50/40 hover:border-amber-200 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-extrabold text-slate-900">Role Security</h4>
+                  <p className="text-[10.5px] text-slate-500 font-medium leading-normal">
+                    Granular permissions for Admins and Team Members to protect private log data.
+                  </p>
                 </div>
               </div>
+
             </div>
 
-            {/* Analytics Visual Card (Clean White Light Theme) */}
-            <div className="bg-white text-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/90 space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4 flex-wrap gap-2">
-                <div className="text-sm font-black text-slate-900 tracking-tight">Apex Tech Academy - Weekly Report</div>
-                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-mono font-bold rounded-full border border-emerald-200/80">
-                  +18.4% Efficiency
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold text-slate-700">
-                    <span>Curriculum & Staff Management</span>
-                    <span className="font-mono text-[#3C83F6]">42 hrs (88%)</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="w-[88%] h-full bg-[#3C83F6]"></div>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold text-slate-700">
-                    <span>Student UI & Portal Sprints</span>
-                    <span className="font-mono text-emerald-600">38 hrs (75%)</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="w-[75%] h-full bg-emerald-500"></div>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold text-slate-700">
-                    <span>Faculty Grading & Exams</span>
-                    <span className="font-mono text-amber-600">26 hrs (60%)</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="w-[60%] h-full bg-amber-500"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2 flex items-center justify-between text-xs text-slate-500 font-mono flex-wrap gap-2">
-                <span className="font-bold">Verified Logged Time: 106.0 hrs</span>
-                <button onClick={() => handleDemoLogin('admin')} className="text-[#3C83F6] hover:underline font-extrabold cursor-pointer">
-                  View Full Analytics →
-                </button>
+            {/* Right Column: Simple Clean Image */}
+            <div className="lg:col-span-6">
+              <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-lg">
+                <img 
+                  src={heroDashboardImg} 
+                  alt="FlowTrack Workspace Capabilities Preview" 
+                  referrerPolicy="no-referrer"
+                  className="w-full h-auto object-cover rounded-2xl"
+                />
               </div>
             </div>
 
@@ -1112,42 +923,168 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
       </section>
 
       {/* Frequently Asked Questions (FAQ) Section */}
-      <section id="faq" className="py-20 px-6 lg:px-12 bg-white border-t border-slate-200/80">
-        <div className="max-w-4xl mx-auto space-y-10">
+      <section id="faq" className="py-20 px-6 lg:px-12 bg-slate-50/50 border-t border-slate-200/80">
+        <div className="max-w-7xl mx-auto">
           
-          <div className="text-center space-y-3">
-            <span className="text-xs font-extrabold text-[#3C83F6] bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200/60">
-              GOT QUESTIONS?
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              Frequently Asked Questions
-            </h2>
-          </div>
-
-          <div className="space-y-4">
-            {faqItems.map((item, index) => (
-              <div 
-                key={index}
-                className="border border-slate-200/90 rounded-2xl overflow-hidden transition-all bg-slate-50/50"
-              >
-                <button
-                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full p-5 text-left font-black text-sm text-slate-900 flex items-center justify-between cursor-pointer hover:bg-slate-100/80 transition-colors"
-                >
-                  <span className="flex items-center gap-3">
-                    <HelpCircle className="w-4 h-4 text-[#3C83F6]" />
-                    <span>{item.q}</span>
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
-                </button>
-
-                {openFaq === index && (
-                  <div className="px-5 pb-5 pt-1 text-xs text-slate-600 font-medium leading-relaxed border-t border-slate-200/60 bg-white">
-                    {item.a}
-                  </div>
-                )}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            
+            {/* Left Column: FAQ Accordions */}
+            <div className="lg:col-span-7 space-y-6 text-left">
+              <div className="space-y-3">
+                <span className="inline-flex items-center gap-2 text-xs font-black text-[#3C83F6] bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-200/60 shadow-xs">
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>GOT QUESTIONS?</span>
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                  Frequently Asked Questions
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                  Everything you need to know about FlowTrack workspace setup, live stopwatches, member roles, and automated 365-day reports.
+                </p>
               </div>
-            ))}
+
+              {/* FAQ List with Dynamic #3C83F6 Hover Effect */}
+              <div className="space-y-3.5 pt-2">
+                {faqItems.map((item, index) => {
+                  const isOpen = openFaq === index;
+                  return (
+                    <div 
+                      key={index}
+                      className={`rounded-2xl border transition-all duration-300 group cursor-pointer overflow-hidden ${
+                        isOpen 
+                          ? 'bg-white border-[#3C83F6] shadow-md ring-1 ring-[#3C83F6]/30' 
+                          : 'bg-white border-slate-200/90 shadow-xs hover:bg-[#3C83F6] hover:border-[#3C83F6] hover:shadow-xl hover:shadow-[#3C83F6]/20'
+                      }`}
+                    >
+                      <button
+                        onClick={() => setOpenFaq(isOpen ? null : index)}
+                        className="w-full p-4 sm:p-5 text-left font-black text-sm text-slate-900 flex items-center justify-between cursor-pointer transition-colors duration-300"
+                      >
+                        <span className="flex items-center gap-3 pr-3">
+                          <HelpCircle 
+                            className={`w-4 h-4 shrink-0 transition-colors duration-300 ${
+                              isOpen 
+                                ? 'text-[#3C83F6]' 
+                                : 'text-[#3C83F6] group-hover:text-white'
+                            }`} 
+                          />
+                          <span className={`transition-colors duration-300 ${
+                            isOpen 
+                              ? 'text-slate-900' 
+                              : 'text-slate-900 group-hover:text-white'
+                          }`}>
+                            {item.q}
+                          </span>
+                        </span>
+                        <ChevronDown 
+                          className={`w-4 h-4 shrink-0 transition-all duration-300 ${
+                            isOpen 
+                              ? 'rotate-180 text-[#3C83F6]' 
+                              : 'text-slate-400 group-hover:text-white'
+                          }`} 
+                        />
+                      </button>
+
+                      {isOpen && (
+                        <div className="px-5 pb-5 pt-1 text-xs text-slate-600 font-medium leading-relaxed border-t border-slate-100 bg-slate-50/50 animate-in fade-in duration-200">
+                          {item.a}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right Column: Visual Time Tracking & Support Showcase Card (Clean White Theme) */}
+            <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
+              
+              <div className="bg-white rounded-[32px] p-6 sm:p-8 border border-slate-200/90 shadow-xl shadow-slate-200/40 space-y-6 relative overflow-hidden group">
+                
+                {/* Decorative Soft Radial Background Accent */}
+                <div className="absolute -top-20 -right-20 w-60 h-60 bg-blue-500/5 rounded-full blur-3xl pointer-events-none group-hover:bg-blue-500/10 transition-all duration-500"></div>
+                
+                {/* Header Tag */}
+                <div className="flex items-center justify-between relative z-10">
+                  <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-[#3C83F6] bg-blue-50 px-3 py-1 rounded-full border border-blue-200/60">
+                    <Headphones className="w-3.5 h-3.5 text-[#3C83F6]" />
+                    <span>24/7 FlowTrack Assistance</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/70">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Live Help Online</span>
+                  </span>
+                </div>
+
+                {/* Main Card Content */}
+                <div className="space-y-2 relative z-10 text-left">
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
+                    Have Questions About Live Stopwatches or Roles?
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    Our team setup specialists are available round-the-clock to guide your academy, business, or faculty workspace.
+                  </p>
+                </div>
+
+                {/* Dashboard Time Tracking Image Preview Card */}
+                <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 shadow-md group/img cursor-pointer transition-transform duration-300 hover:scale-[1.01] bg-slate-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80" 
+                    alt="FlowTrack Live Analytics & Support Dashboard" 
+                    className="w-full h-48 object-cover object-center opacity-95 group-hover/img:opacity-100 transition-opacity duration-300"
+                  />
+                  
+                  {/* Light Glass Overlay Badge */}
+                  <div className="absolute inset-x-3 bottom-3 p-3 bg-white/95 backdrop-blur-md rounded-xl border border-slate-200/80 shadow-lg flex items-center justify-between text-left">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8.5 h-8.5 rounded-lg bg-[#3C83F6] text-white flex items-center justify-center shrink-0 shadow-xs">
+                        <Clock className="w-4 h-4 animate-spin-slow" />
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-black text-slate-900 leading-none">Live Workspace Support</div>
+                        <div className="text-[9.5px] text-slate-500 font-medium">Real-Time Assistance</div>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-mono font-black text-[#3C83F6] bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200/80">
+                      24/7 Active
+                    </span>
+                  </div>
+                </div>
+
+                {/* Feature Highlights Grid */}
+                <div className="grid grid-cols-2 gap-3 pt-1 text-left relative z-10">
+                  <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-1 hover:bg-blue-50/50 hover:border-blue-200 transition-all">
+                    <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-amber-500" />
+                      Instant Setup
+                    </div>
+                    <p className="text-[10px] text-slate-500">Join code & role links</p>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-1 hover:bg-blue-50/50 hover:border-blue-200 transition-all">
+                    <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      Role Security
+                    </div>
+                    <p className="text-[10px] text-slate-500">Admin & Member controls</p>
+                  </div>
+                </div>
+
+                {/* CTA Action Button */}
+                <div className="pt-2 relative z-10">
+                  <button
+                    onClick={() => openAuthModal('signup')}
+                    className="w-full py-3.5 px-5 bg-[#3C83F6] hover:bg-[#2563eb] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-[#3C83F6]/25 hover:shadow-xl hover:shadow-[#3C83F6]/35 transition-all cursor-pointer flex items-center justify-center gap-2.5 active:scale-[0.99]"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Contact Support Team</span>
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+
           </div>
 
         </div>
