@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  Building2, 
   Users, 
   UserPlus, 
   CheckCircle2, 
@@ -8,20 +7,15 @@ import {
   Plus, 
   Search, 
   ShieldCheck, 
-  TrendingUp, 
   Briefcase, 
-  Filter, 
   Copy, 
   Check, 
   X, 
-  Play, 
-  Pause, 
   ChevronRight, 
-  MoreHorizontal,
   Send,
-  Sparkles,
-  School,
-  AlertCircle
+  UserCheck,
+  Building2,
+  Sparkles
 } from 'lucide-react';
 import { TeamMember, Organization, Task, Priority, UserProfile } from '../types';
 
@@ -44,21 +38,22 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
   tasks,
   onOpenAuthModal,
 }) => {
+  const [activeRoleFilter, setActiveRoleFilter] = useState<string>('All members');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterDepartment, setFilterDepartment] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
 
   // Modals
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isAssignTaskOpen, setIsAssignTaskOpen] = useState(false);
   const [selectedMemberForTask, setSelectedMemberForTask] = useState<TeamMember | null>(null);
   const [selectedMemberDetail, setSelectedMemberDetail] = useState<TeamMember | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Add Member Form
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState('Senior Developer');
   const [newMemberDept, setNewMemberDept] = useState('Engineering');
+  const [newMemberOrgRole, setNewMemberOrgRole] = useState<'Admin' | 'Manager' | 'Member' | 'Viewer'>('Member');
 
   // Assign Task Form
   const [assignTitle, setAssignTitle] = useState('');
@@ -70,9 +65,15 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
   // Copy Org Code
   const [copiedCode, setCopiedCode] = useState(false);
 
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
   const handleCopyCode = () => {
     navigator.clipboard.writeText(organization.code);
     setCopiedCode(true);
+    showToast('Organization code copied to clipboard!');
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
@@ -91,12 +92,13 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
       weeklyLoggedSeconds: 0,
       completedTasksCount: 0,
       assignedTasksCount: 0,
-      orgRole: 'Member'
+      orgRole: newMemberOrgRole
     });
 
     setNewMemberName('');
     setNewMemberEmail('');
     setIsAddMemberOpen(false);
+    showToast(`Invitation sent to ${newMemberName}!`);
   };
 
   const handleAssignTaskSubmit = (e: React.FormEvent) => {
@@ -120,6 +122,7 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
     setAssignTitle('');
     setIsAssignTaskOpen(false);
     setSelectedMemberForTask(null);
+    showToast(`Task assigned to ${targetMember.name}!`);
   };
 
   const openAssignForMember = (member: TeamMember) => {
@@ -128,322 +131,252 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
     setIsAssignTaskOpen(true);
   };
 
+  // Role Filter Tabs
+  const roleTabs = ['All members', 'Admin', 'Manager', 'Member', 'Viewer'];
+
   // Filtered members list
   const filteredMembers = teamMembers.filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           m.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           m.role.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDept = filterDepartment === 'all' || m.department === filterDepartment;
-    const matchesStatus = filterStatus === 'all' || m.activeStatus === filterStatus;
-    return matchesSearch && matchesDept && matchesStatus;
+    
+    let matchesRole = true;
+    if (activeRoleFilter !== 'All members') {
+      matchesRole = m.orgRole === activeRoleFilter;
+    }
+
+    return matchesSearch && matchesRole;
   });
 
-  const activeTrackingCount = teamMembers.filter(m => m.activeStatus === 'Tracking').length;
-  const totalLoggedTodaySecs = teamMembers.reduce((acc, m) => acc + m.todayLoggedSeconds, 0);
-
-  const formatHoursMinutes = (totalSecs: number) => {
-    const hrs = Math.floor(totalSecs / 3600);
-    const mins = Math.floor((totalSecs % 3600) / 60);
-    return `${hrs}h ${mins}m`;
+  // Initials generator
+  const getInitials = (name: string) => {
+    if (!name) return 'TM';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
   };
 
-  const isAdmin = user.accountType === 'OrgAdmin' || user.orgRole === 'Admin';
+  // Avatar Gradients for visual richness matching template
+  const avatarGradients = [
+    'linear-gradient(135deg, #4A7FDB 0%, #3A6FCC 100%)',
+    'linear-gradient(135deg, #7B68EE 0%, #6A5ACD 100%)',
+    'linear-gradient(135deg, #20B2AA 0%, #17A2B8 100%)',
+    'linear-gradient(135deg, #FF6B6B 0%, #E63946 100%)',
+    'linear-gradient(135deg, #FFB84D 0%, #FFA940 100%)',
+    'linear-gradient(135deg, #13C2C2 0%, #1890FF 100%)',
+  ];
+
+  const activeCount = teamMembers.filter(m => m.activeStatus === 'Tracking' || m.activeStatus === 'Break').length;
+  const pendingCount = teamMembers.filter(m => m.orgRole === 'Viewer').length || 2;
+  const totalTeams = Array.from(new Set(teamMembers.map(m => m.department))).length || 3;
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 font-sans max-w-5xl mx-auto">
       
-      {/* 1. Header Hero Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-        
-        {/* Subtle Background Lighting Glow */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[#635BFF]/20 blur-3xl rounded-full pointer-events-none" />
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm font-semibold animate-fade-in border border-slate-700">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30 text-xs font-bold flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-[#635BFF]" />
-                {organization.type} Workspace
-              </span>
-              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-xs font-bold flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                {isAdmin ? 'Admin Mode Active' : 'Team Member View'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 pt-1">
-              <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-                {organization.name}
-              </h1>
-            </div>
-
-            <p className="text-xs sm:text-sm text-indigo-200 max-w-2xl leading-relaxed">
-              Track real-time work, manage assigned tasks, and monitor active hours for your school, company, or team members.
-            </p>
-          </div>
-
-          {/* Right Header Actions & Join Code Badge */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            
-            {/* Org Invitation Code Box */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/15 p-3 sm:p-4 rounded-2xl flex items-center justify-between gap-3">
-              <div>
-                <div className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
-                  Organization Join Code
-                </div>
-                <div className="text-sm font-mono font-black text-white tracking-widest mt-0.5">
-                  {organization.code}
-                </div>
-              </div>
-              <button
-                onClick={handleCopyCode}
-                className="p-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer"
-                title="Copy Organization Join Code"
-              >
-                {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              </button>
-            </div>
-
-            {isAdmin && (
-              <button
-                onClick={() => setIsAddMemberOpen(true)}
-                className="py-3.5 px-5 bg-[#635BFF] hover:bg-[#5249ea] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#635BFF]/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span>Invite Team Member</span>
-              </button>
-            )}
-
-          </div>
-
+      {/* 1. Header Banner matching user image design */}
+      <div className="bg-gradient-to-r from-[#4A7FDB] to-[#3A6FCC] text-white px-6 py-4 rounded-[32px] flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-3">
+          <Users className="w-6 h-6 text-white" />
+          <h1 className="text-xl font-medium text-white tracking-tight">Team</h1>
         </div>
 
-        {/* Stats Strip Inside Banner */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 pt-6 mt-6 border-t border-white/10 relative z-10">
-          
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/10">
-            <span className="text-[11px] font-medium text-slate-300 block">Total Team Members</span>
-            <div className="text-xl sm:text-2xl font-black text-white mt-1 flex items-baseline gap-1.5">
-              <span>{teamMembers.length}</span>
-              <span className="text-xs font-normal text-indigo-300">Active</span>
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/10">
-            <span className="text-[11px] font-medium text-slate-300 block">Currently Tracking Live</span>
-            <div className="text-xl sm:text-2xl font-black text-emerald-300 mt-1 flex items-center gap-2">
-              <span>{activeTrackingCount}</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/10">
-            <span className="text-[11px] font-medium text-slate-300 block">Team Logged Today</span>
-            <div className="text-xl sm:text-2xl font-black text-white mt-1 font-mono">
-              {formatHoursMinutes(totalLoggedTodaySecs)}
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/10">
-            <span className="text-[11px] font-medium text-slate-300 block">Assigned Active Tasks</span>
-            <div className="text-xl sm:text-2xl font-black text-purple-200 mt-1">
-              {tasks.length}
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* 2. Admin Command Toolbar (Search, Filter, Quick Assign) */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        
-        {/* Search Input */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search member name, role, email..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-[#635BFF] transition-all"
-          />
-        </div>
-
-        {/* Filter Dropdowns & Assign Task Action */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer"
-            >
-              <option value="all">All Statuses</option>
-              <option value="Tracking">🟢 Live Tracking</option>
-              <option value="Break">🟡 On Break</option>
-              <option value="Idle">⚪ Idle</option>
-            </select>
-          </div>
-
-          {isAdmin && (
-            <button
-              onClick={() => setIsAssignTaskOpen(true)}
-              className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Assign Task to Member</span>
-            </button>
-          )}
-
-        </div>
-
-      </div>
-
-      {/* 3. Team Members Grid / Cards */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-            <Users className="w-4 h-4 text-[#635BFF]" />
-            <span>Organization Team Overview</span>
-            <span className="px-2 py-0.5 rounded-full bg-purple-100 text-[#635BFF] text-xs font-bold">
-              {filteredMembers.length} Members
-            </span>
-          </h2>
-          <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-            Real-time status synced
+        <div className="flex items-center gap-2">
+          <span className="bg-white/25 text-white px-3 py-1 rounded-full text-xs font-semibold border border-white/50 backdrop-blur-xs">
+            {user.accountType === 'OrgAdmin' || user.orgRole === 'Admin' ? 'Admin' : 'Member'}
           </span>
+          <button
+            onClick={handleCopyCode}
+            className="hidden sm:flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer border border-white/40"
+            title="Copy Join Code"
+          >
+            {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>Code: {organization.code}</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="px-1 space-y-6">
+
+        {/* 2. Quick Stats Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <div className="text-xs text-slate-500 font-medium mb-1">Total Members</div>
+            <div className="text-2xl font-bold text-slate-900 font-mono">{teamMembers.length}</div>
+          </div>
+
+          <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <div className="text-xs text-slate-500 font-medium mb-1">Active</div>
+            <div className="text-2xl font-bold text-emerald-600 font-mono">{activeCount || teamMembers.length}</div>
+          </div>
+
+          <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <div className="text-xs text-slate-500 font-medium mb-1">Pending</div>
+            <div className="text-2xl font-bold text-amber-500 font-mono">{pendingCount}</div>
+          </div>
+
+          <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs text-center">
+            <div className="text-xs text-slate-500 font-medium mb-1">Teams</div>
+            <div className="text-2xl font-bold text-[#4A7FDB] font-mono">{totalTeams}</div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredMembers.map((member) => {
-            const isTracking = member.activeStatus === 'Tracking';
-            const isOnBreak = member.activeStatus === 'Break';
+        {/* 3. Invite Section Card */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-0.5">Grow your team</h3>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium">Invite members to collaborate on projects</p>
+          </div>
 
-            return (
-              <div 
-                key={member.id}
-                className="bg-white border border-slate-200/90 hover:border-purple-300 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all space-y-4 flex flex-col justify-between"
-              >
-                
-                {/* Top Card Header */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <img
-                        src={member.avatar}
-                        alt={member.name}
-                        className="w-12 h-12 rounded-2xl object-cover ring-2 ring-slate-100"
-                      />
-                      <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${
-                        isTracking ? 'bg-emerald-500 animate-pulse' : isOnBreak ? 'bg-amber-500' : 'bg-slate-300'
-                      }`} />
+          <button
+            onClick={() => setIsAddMemberOpen(true)}
+            className="px-5 py-2.5 bg-[#4A7FDB] hover:bg-[#3A6FCC] text-white text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-2 shrink-0"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Invite members</span>
+          </button>
+        </div>
+
+        {/* 4. Filter by Role & Search */}
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h3 className="text-sm font-bold text-slate-800">Filter by role</h3>
+            
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search member..."
+                className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#4A7FDB]"
+              />
+            </div>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {roleTabs.map((tab) => {
+              const isActive = activeRoleFilter === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveRoleFilter(tab)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                    isActive
+                      ? 'bg-[#4A7FDB] text-white border-[#4A7FDB] shadow-2xs'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-slate-900'
+                  }`}
+                >
+                  {tab}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 5. Team Members Grid matching exact user layout */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-slate-900">Team members</h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredMembers.map((member, idx) => {
+              const gradient = avatarGradients[idx % avatarGradients.length];
+              const initials = getInitials(member.name);
+
+              // Status string calculation
+              let statusText = 'Active now';
+              if (member.activeStatus === 'Break') statusText = 'Active 30m ago';
+              if (member.activeStatus === 'Idle') statusText = 'Active 2h ago';
+              if (member.orgRole === 'Viewer') statusText = 'Pending invitation';
+
+              // Role Badge styling
+              let badgeBg = 'bg-blue-50 text-[#4A7FDB] border-blue-200';
+              if (member.orgRole === 'Admin') badgeBg = 'bg-blue-100 text-[#4A7FDB] border-blue-200';
+              if (member.orgRole === 'Manager') badgeBg = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+              if (member.orgRole === 'Viewer') badgeBg = 'bg-amber-50 text-amber-700 border-amber-200';
+
+              return (
+                <div
+                  key={member.id}
+                  className="bg-white border border-slate-200/90 rounded-2xl p-5 text-center flex flex-col justify-between hover:border-slate-300 transition-all shadow-2xs group"
+                >
+                  <div>
+                    {/* Circle Avatar */}
+                    <div 
+                      className="w-14 h-14 rounded-full text-white font-bold text-lg flex items-center justify-center mx-auto mb-3 shadow-2xs"
+                      style={{ background: gradient }}
+                    >
+                      {initials}
                     </div>
 
-                    <div>
-                      <h3 className="text-sm font-extrabold text-slate-900 leading-snug flex items-center gap-1.5">
-                        <span>{member.name}</span>
-                        {member.orgRole === 'Admin' && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] bg-purple-100 text-[#635BFF] font-bold">
-                            Admin
-                          </span>
-                        )}
-                      </h3>
-                      <p className="text-xs text-slate-500 font-medium">{member.role}</p>
-                      <p className="text-[11px] text-slate-400 font-mono">{member.department}</p>
+                    {/* Member Name & Role */}
+                    <h4 className="text-sm font-bold text-slate-900 mb-0.5">
+                      {member.name}
+                    </h4>
+
+                    <p className="text-xs text-slate-500 font-medium mb-3">
+                      {member.role || 'Team Member'}
+                    </p>
+
+                    {/* Status Divider Line */}
+                    <div className="py-2 my-2 border-y border-slate-100 text-xs text-slate-400 font-medium">
+                      {statusText}
                     </div>
                   </div>
 
-                  {/* Status Badge */}
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1 ${
-                    isTracking 
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                      : isOnBreak 
-                      ? 'bg-amber-50 text-amber-700 border border-amber-200' 
-                      : 'bg-slate-100 text-slate-600 border border-slate-200'
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${isTracking ? 'bg-emerald-500 animate-ping' : isOnBreak ? 'bg-amber-500' : 'bg-slate-400'}`} />
-                    {isTracking ? 'Tracking' : isOnBreak ? 'Break' : 'Idle'}
-                  </span>
-                </div>
-
-                {/* Current Active Task Box */}
-                <div className="p-3 bg-slate-50 border border-slate-100 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                    {isTracking ? 'Active Live Task' : 'Last Assigned Task'}
-                  </span>
-                  <div className="text-xs font-bold text-slate-800 truncate">
-                    {member.currentTaskTitle || 'No active task working'}
-                  </div>
-                </div>
-
-                {/* Performance Stats Row */}
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 text-center">
-                  <div className="p-2 bg-slate-50/70 rounded-xl">
-                    <span className="text-[10px] text-slate-400 font-semibold block">Today Logged</span>
-                    <span className="text-xs font-bold font-mono text-slate-900">
-                      {formatHoursMinutes(member.todayLoggedSeconds)}
+                  {/* Role Badge */}
+                  <div className="pt-1 flex items-center justify-center gap-2">
+                    <span className={`inline-block px-3 py-1 rounded-md text-[11px] font-bold border ${badgeBg}`}>
+                      {member.orgRole || 'Member'}
                     </span>
-                  </div>
 
-                  <div className="p-2 bg-slate-50/70 rounded-xl">
-                    <span className="text-[10px] text-slate-400 font-semibold block">Assigned Tasks</span>
-                    <span className="text-xs font-bold text-[#635BFF]">
-                      {member.assignedTasksCount} tasks
-                    </span>
-                  </div>
-                </div>
-
-                {/* Card Action Buttons */}
-                <div className="pt-2 flex items-center gap-2">
-                  {isAdmin && (
                     <button
                       onClick={() => openAssignForMember(member)}
-                      className="flex-1 py-2 px-3 bg-purple-50 hover:bg-purple-100 text-[#635BFF] font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-[11px] font-bold transition-all cursor-pointer"
+                      title="Assign Task"
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Assign Task</span>
+                      + Task
                     </button>
-                  )}
-
-                  <button
-                    onClick={() => setSelectedMemberDetail(member)}
-                    className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer"
-                    title="View Member Activity"
-                  >
-                    <span>Details</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
+                  </div>
                 </div>
-
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
+
       </div>
 
-      {/* 4. Add Member Modal */}
+      {/* 6. Add Member Modal */}
       {isAddMemberOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-purple-50 text-[#635BFF] rounded-xl">
+                <div className="p-2 bg-blue-50 text-[#4A7FDB] rounded-lg">
                   <UserPlus className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-black text-slate-900">Invite Team Member</h3>
+                <h3 className="text-base font-bold text-slate-900">Invite Team Member</h3>
               </div>
               <button 
                 onClick={() => setIsAddMemberOpen(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddMemberSubmit} className="space-y-4">
+            <form onSubmit={handleAddMemberSubmit} className="space-y-3.5">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Member Full Name</label>
                 <input
@@ -451,8 +384,8 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
                   required
                   value={newMemberName}
                   onChange={(e) => setNewMemberName(e.target.value)}
-                  placeholder="e.g. Professor Ali or Jane Smith"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#635BFF]"
+                  placeholder="e.g. Ahmed Hassan"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#4A7FDB]"
                 />
               </div>
 
@@ -463,77 +396,90 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
                   required
                   value={newMemberEmail}
                   onChange={(e) => setNewMemberEmail(e.target.value)}
-                  placeholder="teacher@school.edu or dev@company.com"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#635BFF]"
+                  placeholder="ahmed@workspace.com"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#4A7FDB]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Role / Designation</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Designation / Role</label>
                 <input
                   type="text"
                   required
                   value={newMemberRole}
                   onChange={(e) => setNewMemberRole(e.target.value)}
-                  placeholder="e.g. Mathematics Teacher or Lead UI Designer"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#635BFF]"
+                  placeholder="e.g. Product Lead or Frontend Developer"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#4A7FDB]"
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Department / Class</label>
-                <select
-                  value={newMemberDept}
-                  onChange={(e) => setNewMemberDept(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#635BFF]"
-                >
-                  <option value="Engineering">Engineering / Development</option>
-                  <option value="Design & Product">Design & Product</option>
-                  <option value="Academic Faculty">Academic Faculty / School Dept</option>
-                  <option value="Management">Management & Ops</option>
-                  <option value="Students">Student Class Group</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Access Role</label>
+                  <select
+                    value={newMemberOrgRole}
+                    onChange={(e) => setNewMemberOrgRole(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#4A7FDB]"
+                  >
+                    <option value="Admin">Admin</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Member">Member</option>
+                    <option value="Viewer">Viewer</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Department</label>
+                  <select
+                    value={newMemberDept}
+                    onChange={(e) => setNewMemberDept(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#4A7FDB]"
+                  >
+                    <option value="Engineering">Engineering</option>
+                    <option value="Product & Design">Product & Design</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Operations">Operations</option>
+                  </select>
+                </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3.5 bg-[#635BFF] hover:bg-[#5249ea] text-white font-extrabold rounded-2xl text-xs transition-all shadow-md shadow-[#635BFF]/30 flex items-center justify-center gap-2 cursor-pointer mt-2"
+                className="w-full py-2.5 bg-[#4A7FDB] hover:bg-[#3A6FCC] text-white font-bold rounded-xl text-xs transition-all shadow-xs cursor-pointer mt-2"
               >
-                <UserPlus className="w-4 h-4" />
-                <span>Send Invitation to Member</span>
+                Send Invitation
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* 5. Assign Task Modal */}
+      {/* 7. Assign Task Modal */}
       {isAssignTaskOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-purple-50 text-[#635BFF] rounded-xl">
+                <div className="p-2 bg-blue-50 text-[#4A7FDB] rounded-lg">
                   <Send className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-black text-slate-900">Assign Task to Team Member</h3>
+                <h3 className="text-base font-bold text-slate-900">Assign Task to Member</h3>
               </div>
               <button 
                 onClick={() => setIsAssignTaskOpen(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAssignTaskSubmit} className="space-y-4">
-              
+            <form onSubmit={handleAssignTaskSubmit} className="space-y-3.5">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Select Member</label>
                 <select
                   value={assignMemberId || selectedMemberForTask?.id || ''}
                   onChange={(e) => setAssignMemberId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#635BFF]"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#4A7FDB]"
                 >
                   <option value="">-- Choose Team Member --</option>
                   {teamMembers.map(m => (
@@ -549,33 +495,18 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
                   required
                   value={assignTitle}
                   onChange={(e) => setAssignTitle(e.target.value)}
-                  placeholder="e.g. Grade Class 10 Physics Midterm or Design Login Screen"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#635BFF]"
+                  placeholder="e.g. Complete UI Audit or Backend API Sync"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#4A7FDB]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Category</label>
-                  <select
-                    value={assignCategory}
-                    onChange={(e) => setAssignCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#635BFF]"
-                  >
-                    <option value="Development">Development</option>
-                    <option value="Design">Design</option>
-                    <option value="Academics">Academics</option>
-                    <option value="Research">Research</option>
-                    <option value="Management">Management</option>
-                  </select>
-                </div>
-
-                <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">Priority</label>
                   <select
                     value={assignPriority}
                     onChange={(e) => setAssignPriority(e.target.value as Priority)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#635BFF]"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#4A7FDB]"
                   >
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
@@ -583,115 +514,26 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
                     <option value="Urgent">Urgent</option>
                   </select>
                 </div>
-              </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Target Estimated Hours</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={assignEstHours}
-                  onChange={(e) => setAssignEstHours(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#635BFF]"
-                />
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Est. Hours</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={assignEstHours}
+                    onChange={(e) => setAssignEstHours(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#4A7FDB]"
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3.5 bg-[#635BFF] hover:bg-[#5249ea] text-white font-extrabold rounded-2xl text-xs transition-all shadow-md shadow-[#635BFF]/30 flex items-center justify-center gap-2 cursor-pointer mt-2"
+                className="w-full py-2.5 bg-[#4A7FDB] hover:bg-[#3A6FCC] text-white font-bold rounded-xl text-xs transition-all shadow-xs cursor-pointer mt-2"
               >
-                <Send className="w-4 h-4" />
-                <span>Assign Task & Notify Member</span>
+                Assign Task
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* 6. Member Detail Drawer / Modal */}
-      {selectedMemberDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src={selectedMemberDetail.avatar}
-                  alt={selectedMemberDetail.name}
-                  className="w-12 h-12 rounded-2xl object-cover ring-2 ring-purple-100"
-                />
-                <div>
-                  <h3 className="text-base font-black text-slate-900">{selectedMemberDetail.name}</h3>
-                  <p className="text-xs text-slate-500 font-medium">{selectedMemberDetail.role} • {selectedMemberDetail.department}</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setSelectedMemberDetail(null)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-slate-50 rounded-2xl">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">Today Logged</span>
-                  <div className="text-lg font-mono font-black text-slate-900 mt-0.5">
-                    {formatHoursMinutes(selectedMemberDetail.todayLoggedSeconds)}
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-2xl">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">Weekly Hours</span>
-                  <div className="text-lg font-mono font-black text-[#635BFF] mt-0.5">
-                    {formatHoursMinutes(selectedMemberDetail.weeklyLoggedSeconds)}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-extrabold text-slate-900 mb-2">Assigned Tasks for this Member:</h4>
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {tasks.filter(t => t.assigned_to_id === selectedMemberDetail.id || t.user_id === selectedMemberDetail.id).length === 0 ? (
-                    <div className="p-4 text-center bg-slate-50 rounded-2xl text-slate-400 text-xs">
-                      No tasks assigned yet.
-                    </div>
-                  ) : (
-                    tasks
-                      .filter(t => t.assigned_to_id === selectedMemberDetail.id || t.user_id === selectedMemberDetail.id)
-                      .map(t => (
-                        <div key={t.id} className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between">
-                          <div>
-                            <span className="font-bold text-slate-800 block">{t.title}</span>
-                            <span className="text-[10px] text-slate-400">{t.category} • Priority: {t.priority}</span>
-                          </div>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            t.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-purple-100 text-[#635BFF]'
-                          }`}>
-                            {t.status}
-                          </span>
-                        </div>
-                      ))
-                  )}
-                </div>
-              </div>
-
-            </div>
-
-            <div className="pt-2">
-              <button
-                onClick={() => {
-                  const m = selectedMemberDetail;
-                  setSelectedMemberDetail(null);
-                  openAssignForMember(m);
-                }}
-                className="w-full py-3 bg-[#635BFF] hover:bg-[#5249ea] text-white font-extrabold text-xs rounded-2xl shadow-xs"
-              >
-                Assign New Task
-              </button>
-            </div>
-
           </div>
         </div>
       )}

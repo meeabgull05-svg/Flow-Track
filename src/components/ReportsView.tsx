@@ -1,24 +1,28 @@
 import React, { useState } from 'react';
 import { 
   FileText, 
-  Download, 
-  Calendar, 
-  Filter, 
-  DollarSign, 
-  Clock, 
-  CheckCircle2, 
   Search, 
+  BarChart3, 
+  TrendingUp, 
+  Users, 
+  Wrench, 
+  Megaphone, 
+  Briefcase, 
+  Clock, 
+  DollarSign, 
+  CheckCircle2, 
   Printer, 
   Share2, 
-  Folder, 
-  Briefcase, 
-  Sparkles, 
-  ChevronRight, 
-  ArrowUpRight,
-  Send,
-  PieChart,
-  SlidersHorizontal,
-  FileSpreadsheet
+  Download, 
+  X, 
+  ArrowUpRight, 
+  PieChart, 
+  FileSpreadsheet, 
+  Eye, 
+  Sparkles,
+  Building2,
+  Calendar,
+  Check
 } from 'lucide-react';
 import { Task, UserProfile } from '../types';
 import { formatDuration } from '../utils/timeUtils';
@@ -28,86 +32,106 @@ interface ReportsViewProps {
   user: UserProfile;
 }
 
-interface ReportRow {
+interface ReportItem {
   id: string;
-  date: string;
-  taskTitle: string;
-  project: string;
-  category: string;
-  durationSeconds: number;
-  hourlyRate: number;
-  isBillable: boolean;
-  status: 'Approved' | 'Pending Review' | 'Billed';
+  title: string;
+  category: 'Sales' | 'Analytics' | 'Operations' | 'Finance' | 'Time Tracking';
+  description: string;
+  icon: React.ElementType;
+  views: number;
+  updated: string;
 }
 
 export const ReportsView: React.FC<ReportsViewProps> = ({ tasks, user }) => {
-  // Filter States
-  const [dateRange, setDateRange] = useState<'thisWeek' | 'lastWeek' | 'thisMonth' | 'custom'>('thisWeek');
-  const [selectedProject, setSelectedProject] = useState<string>('All Projects');
-  const [groupBy, setGroupBy] = useState<'Date' | 'Project' | 'Category'>('Project');
-  const [billableOnly, setBillableOnly] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<string>('All');
+  const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Convert tasks to detailed report rows with mock financial billable data
-  const reportRows: ReportRow[] = tasks.map((t, idx) => {
-    const defaultRates: { [cat: string]: number } = {
-      'UI Design': 85,
-      'Development': 95,
-      'Full-Stack Web': 100,
-      'Meetings': 60,
-      'Research': 70,
-    };
-    const rate = defaultRates[t.category || 'Development'] || 80;
-    const isBill = idx % 5 !== 4; // 80% billable
+  // List of pre-configured and dynamic reports matching the user's design template
+  const reportsList: ReportItem[] = [
+    {
+      id: 'rep_001',
+      title: 'Monthly Sales & Revenue Report',
+      category: 'Sales',
+      description: 'Sales performance, hourly billing trends, and region-wise revenue',
+      icon: BarChart3,
+      views: 45,
+      updated: 'Updated today',
+    },
+    {
+      id: 'rep_002',
+      title: 'Q2 Financial Report',
+      category: 'Finance',
+      description: 'Revenue, project expenses, and billable profitability analysis',
+      icon: TrendingUp,
+      views: 32,
+      updated: 'Updated 3 days ago',
+    },
+    {
+      id: 'rep_003',
+      title: 'Customer & Student Analytics',
+      category: 'Analytics',
+      description: 'User engagement, workspace retention, and active growth metrics',
+      icon: Users,
+      views: 28,
+      updated: 'Updated 2 days ago',
+    },
+    {
+      id: 'rep_004',
+      title: 'Operations & Stopwatch Performance',
+      category: 'Operations',
+      description: 'Time log efficiency metrics, task audits, and productivity analysis',
+      icon: Wrench,
+      views: 18,
+      updated: 'Updated 1 day ago',
+    },
+    {
+      id: 'rep_005',
+      title: 'Marketing & Outreach Campaigns',
+      category: 'Sales',
+      description: 'Campaign reach, conversion ROI, and channel performance',
+      icon: Megaphone,
+      views: 22,
+      updated: 'Updated 5 days ago',
+    },
+    {
+      id: 'rep_006',
+      title: 'Team Performance & Timesheets',
+      category: 'Operations',
+      description: 'Individual and department KPIs, task logs, and active duration',
+      icon: Briefcase,
+      views: 15,
+      updated: 'Updated 4 days ago',
+    },
+    {
+      id: 'rep_007',
+      title: 'Time Log & Audit Summary',
+      category: 'Time Tracking',
+      description: 'Live stopwatch logs, verified duration entries, and completion status',
+      icon: Clock,
+      views: 54,
+      updated: 'Updated today',
+    },
+    {
+      id: 'rep_008',
+      title: 'Project Revenue & Expense Allocation',
+      category: 'Analytics',
+      description: 'Project-wise hourly distribution and estimated budget utilization',
+      icon: PieChart,
+      views: 39,
+      updated: 'Updated yesterday',
+    },
+  ];
 
-    return {
-      id: t.id,
-      date: t.created_at ? new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'May 24, 2024',
-      taskTitle: t.title,
-      project: t.category === 'UI Design' ? 'FlowTrack Website' : t.category === 'Full-Stack Web' ? 'WeVersity Platform' : 'Client Dashboard',
-      category: t.category || 'Development',
-      durationSeconds: t.time_spent_seconds || 3600,
-      hourlyRate: rate,
-      isBillable: isBill,
-      status: idx % 3 === 0 ? 'Approved' : idx % 3 === 1 ? 'Billed' : 'Pending Review',
-    };
-  });
+  const filterCategories = ['All', 'Sales', 'Analytics', 'Operations', 'Finance', 'Time Tracking'];
 
-  // Filter calculation
-  const filteredRows = reportRows.filter((row) => {
-    const matchesSearch = row.taskTitle.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          row.project.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          row.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesProject = selectedProject === 'All Projects' || row.project === selectedProject;
-    const matchesBillable = !billableOnly || row.isBillable;
-    return matchesSearch && matchesProject && matchesBillable;
-  });
-
-  // Totals calculations
-  const totalSeconds = filteredRows.reduce((acc, r) => acc + r.durationSeconds, 0);
-  const totalHours = (totalSeconds / 3600).toFixed(1);
-  const billableRows = filteredRows.filter(r => r.isBillable);
-  const totalBillableSeconds = billableRows.reduce((acc, r) => acc + r.durationSeconds, 0);
-  const totalBillableHours = (totalBillableSeconds / 3600).toFixed(1);
-  const totalRevenue = billableRows.reduce((acc, r) => acc + (r.durationSeconds / 3600) * r.hourlyRate, 0);
-
-  // Grouped project summary calculation
-  const projectSummaryMap: { [proj: string]: { hours: number; revenue: number; color: string } } = {
-    'FlowTrack Website': { hours: 0, revenue: 0, color: 'bg-[#635BFF]' },
-    'WeVersity Platform': { hours: 0, revenue: 0, color: 'bg-emerald-500' },
-    'Client Dashboard': { hours: 0, revenue: 0, color: 'bg-blue-500' },
-  };
-
-  filteredRows.forEach(r => {
-    if (!projectSummaryMap[r.project]) {
-      projectSummaryMap[r.project] = { hours: 0, revenue: 0, color: 'bg-purple-500' };
-    }
-    const hrs = r.durationSeconds / 3600;
-    projectSummaryMap[r.project].hours += hrs;
-    if (r.isBillable) {
-      projectSummaryMap[r.project].revenue += hrs * r.hourlyRate;
-    }
+  // Filtered reports calculation
+  const filteredReports = reportsList.filter((item) => {
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = activeFilter === 'All' || item.category === activeFilter;
+    return matchesSearch && matchesCategory;
   });
 
   const showToast = (msg: string) => {
@@ -115,8 +139,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ tasks, user }) => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  // Calculations for dynamic data in report detail modal
+  const totalLoggedSeconds = tasks.reduce((acc, t) => acc + (t.time_spent_seconds || 0), 0);
+  const totalLoggedHours = (totalLoggedSeconds / 3600).toFixed(1);
+  const completedTasks = tasks.filter(t => t.status === 'Completed').length;
+  const totalRevenueEstimated = (totalLoggedSeconds / 3600) * 85;
+
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 font-sans">
       
       {/* Toast Notification */}
       {toastMessage && (
@@ -126,345 +156,266 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ tasks, user }) => {
         </div>
       )}
 
-      {/* 1. Header & Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Reports & Timesheets
+      {/* 1. Header Banner matching the user image style */}
+      <div className="bg-gradient-to-r from-[#4A7FDB] to-[#3A6FCC] text-white p-5 sm:p-6 rounded-2xl flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 bg-white/15 rounded-xl backdrop-blur-sm">
+            <FileText className="w-7 h-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              Reports
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-[#635BFF] text-xs font-bold">
-              Automated Billing
-            </span>
+            <p className="text-xs sm:text-sm text-blue-100/90 font-medium mt-0.5">
+              Comprehensive analytics, time audit summaries, and exportable data
+            </p>
           </div>
-          <p className="text-sm text-slate-500 font-medium mt-1">
-            Export verified time entries, client billing summaries, and audit logs.
-          </p>
         </div>
 
-        {/* Quick Action Buttons */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            onClick={() => showToast('Printing summary report...')}
-            className="p-2.5 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-700 rounded-2xl text-xs font-bold transition-all shadow-xs"
-            title="Print Report"
-          >
-            <Printer className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={() => showToast('PDF Report downloaded to downloads folder!')}
-            className="px-4 py-2.5 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-800 rounded-2xl text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center gap-2"
-          >
-            <FileText className="w-4 h-4 text-[#635BFF]" />
-            <span>Export PDF</span>
-          </button>
-
-          <button
-            onClick={() => showToast('CSV Timesheet exported successfully!')}
-            className="px-5 py-2.5 bg-[#635BFF] hover:bg-[#5249ea] text-white rounded-2xl text-xs sm:text-sm font-bold shadow-lg shadow-[#635BFF]/25 transition-all flex items-center gap-2"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-purple-200" />
-            <span>Export CSV</span>
-          </button>
+        <div className="hidden sm:flex items-center gap-2">
+          <span className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold backdrop-blur-sm">
+            {reportsList.length} Available
+          </span>
         </div>
       </div>
 
-      {/* 2. KPI Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="max-w-7xl mx-auto space-y-6">
         
-        {/* KPI 1: Revenue */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Estimated Revenue
-            </span>
-            <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-600">
-              <DollarSign className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900 font-mono">
-              ${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
-          <p className="text-[11px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
-            <ArrowUpRight className="w-3.5 h-3.5" />
-            88% billable efficiency
-          </p>
-        </div>
-
-        {/* KPI 2: Total Hours */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Total Logged Time
-            </span>
-            <div className="p-2.5 rounded-2xl bg-purple-50 text-[#635BFF]">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900 font-mono">
-              {totalHours} hrs
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400 font-medium mt-1">
-            Across {filteredRows.length} logged entries
-          </p>
-        </div>
-
-        {/* KPI 3: Billable Hours */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Billable Hours
-            </span>
-            <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-600">
-              <Briefcase className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900 font-mono">
-              {totalBillableHours} hrs
-            </span>
-            <span className="text-xs text-slate-500 font-semibold">
-              (${ (totalRevenue / (Math.max(1, Number(totalBillableHours)))).toFixed(0) }/hr avg)
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400 font-medium mt-1">
-            Ready for client invoicing
-          </p>
-        </div>
-
-        {/* KPI 4: Approved Timesheets */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Audit Status
-            </span>
-            <div className="p-2.5 rounded-2xl bg-amber-50 text-amber-600">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900 font-mono">
-              100%
-            </span>
-            <span className="text-xs text-emerald-600 font-bold">
-              Verified
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400 font-medium mt-1">
-            Zero timer conflicts detected
-          </p>
-        </div>
-
-      </div>
-
-      {/* 3. Filters Toolbar */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-        
-        {/* Left Search & Dropdowns */}
-        <div className="flex flex-wrap items-center gap-3 flex-1">
-          
-          {/* Search */}
-          <div className="relative min-w-[200px] flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        {/* 2. Search Bar */}
+        <div className="flex gap-2.5">
+          <div className="relative flex-1">
+            <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by task name, project..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 focus:border-[#635BFF] focus:bg-white rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#635BFF]/20 transition-all"
+              placeholder="Search reports..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200/90 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#4A7FDB]/30 focus:border-[#4A7FDB] transition-all shadow-2xs"
             />
           </div>
-
-          {/* Project Dropdown */}
-          <select
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            className="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#635BFF]/20"
+          <button 
+            onClick={() => showToast(`Searching for "${searchQuery || 'all reports'}"...`)}
+            className="px-6 py-2.5 bg-[#4A7FDB] hover:bg-[#3A6FCC] text-white font-bold text-sm rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-2"
           >
-            <option value="All Projects">All Projects</option>
-            <option value="FlowTrack Website">FlowTrack Website</option>
-            <option value="WeVersity Platform">WeVersity Platform</option>
-            <option value="Client Dashboard">Client Dashboard</option>
-          </select>
+            <span>Search</span>
+          </button>
+        </div>
 
-          {/* Group By */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-bold">
-            <span className="px-2 text-slate-400 uppercase text-[10px]">Group:</span>
-            {(['Project', 'Date', 'Category'] as const).map((group) => (
-              <button
-                key={group}
-                onClick={() => setGroupBy(group)}
-                className={`px-3 py-1 rounded-lg transition-all ${
-                  groupBy === group
-                    ? 'bg-white text-[#635BFF] shadow-xs font-extrabold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {group}
-              </button>
-            ))}
+        {/* 3. Metrics Cards (4 columns) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-2xs">
+            <div className="text-xs font-semibold text-slate-500 mb-1">Total Reports</div>
+            <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono">24</div>
           </div>
 
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-2xs">
+            <div className="text-xs font-semibold text-slate-500 mb-1">This Month</div>
+            <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono">8</div>
+          </div>
+
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-2xs">
+            <div className="text-xs font-semibold text-slate-500 mb-1">Shared</div>
+            <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono">12</div>
+          </div>
+
+          <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-2xs">
+            <div className="text-xs font-semibold text-slate-500 mb-1">Views (30d)</div>
+            <div className="text-2xl sm:text-3xl font-bold text-[#4A7FDB] font-mono">342</div>
+          </div>
         </div>
 
-        {/* Right Billable Toggle */}
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={billableOnly}
-              onChange={(e) => setBillableOnly(e.target.checked)}
-              className="w-4 h-4 rounded text-[#635BFF] focus:ring-[#635BFF]"
-            />
-            <span>Billable Only</span>
-          </label>
+        {/* 4. Filter by Type */}
+        <div className="space-y-2.5">
+          <h3 className="text-sm font-bold text-slate-800">Filter by type</h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            {filterCategories.map((cat) => {
+              const isActive = activeFilter === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setActiveFilter(cat)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                    isActive
+                      ? 'bg-[#4A7FDB] text-white border-[#4A7FDB] shadow-2xs'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-slate-900'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-      </div>
-
-      {/* 4. Client Breakdown Cards & Main Timesheet Table */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left 2 Columns: Detailed Timesheet Table */}
-        <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900">Timesheet Entries</h3>
-              <p className="text-xs text-slate-400">Detailed breakdown of time logs ready for approval.</p>
-            </div>
-            <span className="text-xs font-mono font-bold text-[#635BFF]">
-              {filteredRows.length} Records
+        {/* 5. Popular Reports Grid */}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-slate-900">Popular Reports</h3>
+            <span className="text-xs text-slate-500 font-medium">
+              Showing {filteredReports.length} of {reportsList.length}
             </span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="pb-3 font-semibold">Date</th>
-                  <th className="pb-3 font-semibold">Task Name</th>
-                  <th className="pb-3 font-semibold">Project</th>
-                  <th className="pb-3 font-semibold">Duration</th>
-                  <th className="pb-3 font-semibold">Rate</th>
-                  <th className="pb-3 font-semibold">Total Amount</th>
-                  <th className="pb-3 font-semibold text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredRows.map((row) => {
-                  const hours = row.durationSeconds / 3600;
-                  const rowTotal = hours * row.hourlyRate;
-
-                  return (
-                    <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 font-medium text-slate-500 whitespace-nowrap">{row.date}</td>
-                      <td className="py-3 font-bold text-slate-900">
-                        {row.taskTitle}
-                        {!row.isBillable && (
-                          <span className="ml-1.5 px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold">
-                            Non-Billable
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 font-semibold text-slate-600">{row.project}</td>
-                      <td className="py-3 font-mono font-bold text-slate-900">
-                        {formatDuration(row.durationSeconds)}
-                      </td>
-                      <td className="py-3 font-mono text-slate-600">${row.hourlyRate}/h</td>
-                      <td className="py-3 font-mono font-bold text-emerald-700">
-                        {row.isBillable ? `$${rowTotal.toFixed(2)}` : '$0.00'}
-                      </td>
-                      <td className="py-3 text-right">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          row.status === 'Approved'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : row.status === 'Billed'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {row.status}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="border-t border-slate-200 text-xs font-extrabold">
-                  <td colSpan={3} className="pt-3 text-slate-800">Total Filtered</td>
-                  <td className="pt-3 font-mono text-[#635BFF]">{formatDuration(totalSeconds)}</td>
-                  <td className="pt-3 text-slate-400">—</td>
-                  <td className="pt-3 font-mono text-emerald-700 text-sm">
-                    ${totalRevenue.toFixed(2)}
-                  </td>
-                  <td className="pt-3" />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-
-        {/* Right Column: Project Revenue Allocation */}
-        <div className="space-y-6">
-          
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
-            <h3 className="text-base font-extrabold text-slate-900">Project Revenue Split</h3>
-            
-            <div className="space-y-4">
-              {Object.entries(projectSummaryMap).map(([projName, summary]) => {
-                const totalRev = totalRevenue || 1;
-                const percent = Math.min(100, Math.round((summary.revenue / totalRev) * 100));
-
-                return (
-                  <div key={projName} className="p-4 rounded-2xl bg-slate-50/70 border border-slate-100 space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-slate-900 flex items-center gap-2">
-                        <span className={`w-3 h-3 rounded-full ${summary.color}`} />
-                        {projName}
-                      </span>
-                      <span className="font-mono text-emerald-700 font-extrabold">
-                        ${summary.revenue.toFixed(2)}
-                      </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredReports.map((report) => {
+              const Icon = report.icon;
+              return (
+                <div
+                  key={report.id}
+                  onClick={() => setSelectedReport(report)}
+                  className="bg-white border border-slate-200/90 rounded-2xl p-5 cursor-pointer transition-all hover:border-[#4A7FDB]/60 hover:shadow-md group flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#4A7FDB] flex items-center justify-center mb-3 group-hover:bg-[#4A7FDB] group-hover:text-white transition-colors">
+                      <Icon className="w-5 h-5" />
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold">
-                      <span>{summary.hours.toFixed(1)} hrs logged</span>
-                      <span>{percent}% of total</span>
-                    </div>
+                    <h4 className="text-sm font-bold text-slate-900 mb-1 group-hover:text-[#4A7FDB] transition-colors">
+                      {report.title}
+                    </h4>
 
-                    <div className="w-full bg-slate-200/70 rounded-full h-1.5 overflow-hidden">
-                      <div className={`${summary.color} h-1.5 rounded-full`} style={{ width: `${percent}%` }} />
-                    </div>
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed mb-4">
+                      {report.description}
+                    </p>
                   </div>
-                );
-              })}
-            </div>
-          </div>
 
-          {/* Automatic Client Invoice Card */}
-          <div className="bg-gradient-to-br from-purple-900 to-indigo-950 text-white rounded-3xl p-6 shadow-lg space-y-3 relative overflow-hidden">
-            <Sparkles className="w-5 h-5 text-amber-300" />
-            <h4 className="text-sm font-extrabold">Generate Client Invoice</h4>
-            <p className="text-xs text-purple-200/90 leading-relaxed">
-              Instantly transform these timesheets into a professional Stripe or PDF invoice.
-            </p>
-            <button
-              onClick={() => showToast('Client Invoice created in draft mode!')}
-              className="w-full mt-2 py-2.5 bg-[#635BFF] hover:bg-[#5249ea] text-white font-bold text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>Create Invoice Draft</span>
-            </button>
+                  <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-100 font-medium">
+                    <span className="flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5 text-slate-400" />
+                      Viewed {report.views} times
+                    </span>
+                    <span>{report.updated}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-
         </div>
 
       </div>
+
+      {/* 6. Interactive Detail Modal for Selected Report */}
+      {selectedReport && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-3xl w-full overflow-hidden max-h-[90vh] flex flex-col animate-scale-up">
+            
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#4A7FDB] to-[#3A6FCC] text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/15 rounded-lg">
+                  <selectedReport.icon className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">{selectedReport.title}</h3>
+                  <p className="text-xs text-blue-100">{selectedReport.category} Report • {selectedReport.updated}</p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setSelectedReport(null)}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              <p className="text-xs sm:text-sm text-slate-600 font-medium">
+                {selectedReport.description}. Below is the generated live data summary based on active tasks and time entries.
+              </p>
+
+              {/* Dynamic Stats Grid inside report */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase">Logged Hours</div>
+                  <div className="text-xl font-bold text-slate-900 font-mono mt-0.5">{totalLoggedHours} hrs</div>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase">Completed Tasks</div>
+                  <div className="text-xl font-bold text-emerald-600 font-mono mt-0.5">{completedTasks} / {tasks.length}</div>
+                </div>
+
+                <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase">Est. Revenue</div>
+                  <div className="text-xl font-bold text-[#4A7FDB] font-mono mt-0.5">${totalRevenueEstimated.toFixed(0)}</div>
+                </div>
+              </div>
+
+              {/* Table of Tasks matching report query */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Report Detailed Logs</h4>
+                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                      <tr>
+                        <th className="p-3">Task Title</th>
+                        <th className="p-3">Category</th>
+                        <th className="p-3">Duration</th>
+                        <th className="p-3 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {tasks.slice(0, 5).map((t) => (
+                        <tr key={t.id} className="hover:bg-slate-50/60">
+                          <td className="p-3 font-semibold text-slate-800">{t.title}</td>
+                          <td className="p-3 text-slate-500">{t.category || 'General'}</td>
+                          <td className="p-3 font-mono font-bold text-slate-700">{formatDuration(t.time_spent_seconds)}</td>
+                          <td className="p-3 text-right">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              t.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {t.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => showToast('Printing report summary...')}
+                  className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print</span>
+                </button>
+
+                <button
+                  onClick={() => showToast('PDF Export started!')}
+                  className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#4A7FDB]" />
+                  <span>Export PDF</span>
+                </button>
+
+                <button
+                  onClick={() => showToast('CSV Report exported successfully!')}
+                  className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Export CSV</span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => setSelectedReport(null)}
+                className="px-4 py-2 bg-[#4A7FDB] hover:bg-[#3A6FCC] text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs"
+              >
+                Close Report
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

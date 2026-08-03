@@ -14,10 +14,40 @@ import {
   BarChart3
 } from 'lucide-react';
 
-export const HeroMotionShowcase: React.FC = () => {
-  const [seconds, setSeconds] = useState(6258); // 01:44:18
-  const [isRunning, setIsRunning] = useState(true);
+interface HeroMotionShowcaseProps {
+  demoTime?: number;
+  isDemoRunning?: boolean;
+  setIsDemoRunning?: React.Dispatch<React.SetStateAction<boolean>>;
+  setDemoTime?: React.Dispatch<React.SetStateAction<number>>;
+}
+
+export const HeroMotionShowcase: React.FC<HeroMotionShowcaseProps> = ({
+  demoTime: propDemoTime,
+  isDemoRunning: propIsDemoRunning,
+  setIsDemoRunning: propSetIsDemoRunning,
+  setDemoTime: propSetDemoTime,
+}) => {
+  const [internalSeconds, setInternalSeconds] = useState(6258); // 01:44:18
+  const [internalIsRunning, setInternalIsRunning] = useState(true);
   const [activeTab, setActiveTab] = useState<'timer' | 'analytics' | 'team'>('timer');
+
+  const isRunning = propIsDemoRunning !== undefined ? propIsDemoRunning : internalIsRunning;
+  const setIsRunning = (val: boolean | ((prev: boolean) => boolean)) => {
+    if (propSetIsDemoRunning) {
+      propSetIsDemoRunning(val);
+    } else {
+      setInternalIsRunning(val);
+    }
+  };
+
+  const seconds = propDemoTime !== undefined ? propDemoTime : internalSeconds;
+  const setSeconds = (val: number | ((prev: number) => number)) => {
+    if (propSetDemoTime) {
+      propSetDemoTime(val);
+    } else {
+      setInternalSeconds(val);
+    }
+  };
 
   useEffect(() => {
     let interval: any = null;
