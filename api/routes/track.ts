@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import connectDB from '../../lib/db';
-import Track from '../../models/Track';
+import connectDB from '../../lib/db.js';
+import Track from '../../models/Track.js';
 
 const router = Router();
 

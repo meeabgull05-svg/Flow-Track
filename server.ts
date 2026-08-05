@@ -2,8 +2,8 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
-import trackRouter from './api/routes/track';
-import adminRouter from './api/routes/admin';
+import trackRouter from './api/routes/track.js';
+import adminRouter from './api/routes/admin.js';
 
 dotenv.config();
 
