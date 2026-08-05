@@ -631,7 +631,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
         <div className="max-w-7xl mx-auto space-y-12">
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <span className="text-xs font-extrabold text-[#3C83F6] bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200/60">
+            <span className="inline-block text-xs font-extrabold text-[#3C83F6] bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200/60">
               CORE CAPABILITIES
             </span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">

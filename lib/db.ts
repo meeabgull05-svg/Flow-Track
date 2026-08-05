@@ -19,8 +19,7 @@ export async function connectDB() {
 
   if (!cached.promise) {
     if (!MONGO_URI) {
-      console.warn('[MongoDB] MONGO_URI is not set in environment variables.');
-      return null;
+      throw new Error('MONGO_URI is not configured in your environment variables. Please add it to your configuration (and redeploy on Vercel if applicable).');
     }
 
     const opts = {
