@@ -10,18 +10,48 @@ import { GoalsView } from './components/GoalsView';
 import { OrganizationView } from './components/OrganizationView';
 import { YearHistoryView } from './components/YearHistoryView';
 import { CodeGuideView } from './components/CodeGuideView';
+import { ProfileView } from './components/ProfileView';
+import { SettingsView } from './components/SettingsView';
 import { LandingPage } from './components/LandingPage';
 import { AddTaskModal } from './components/AddTaskModal';
 import { AiInsightsModal } from './components/AiInsightsModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthScreen } from './components/AuthScreen';
+import { LoadingScreen } from './components/LoadingScreen';
 import { Task, Category, UserProfile, Organization, TeamMember } from './types';
 import { DEFAULT_CATEGORIES, generate1YearSampleTasks } from './utils/sampleData';
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
   // Navigation tab
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
   const [isOpenMobileSidebar, setIsOpenMobileSidebar] = useState(false);
+
+  // Theme Mode & Accent Color
+  const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'sunset' | 'system'>(() => {
+    return (localStorage.getItem('flowtrack_theme_mode') as any) || 'light';
+  });
+
+  const [accentColor, setAccentColor] = useState<string>(() => {
+    return localStorage.getItem('flowtrack_accent_color') || '#3C83F6';
+  });
+
+  useEffect(() => {
+    try {
+      const root = document.documentElement;
+      root.classList.remove('light', 'dark', 'sunset');
+
+      if (themeMode === 'system') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        root.classList.add(prefersDark ? 'dark' : 'light');
+      } else {
+        root.classList.add(themeMode);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [themeMode]);
 
   // Categories & User Profile
   const [categories] = useState<Category[]>(DEFAULT_CATEGORIES);
@@ -268,6 +298,12 @@ export default function App() {
     }
   };
 
+  // Logout Handler
+  const handleLogout = () => {
+    setUser((prev) => ({ ...prev, isSignedIn: false }));
+    setCurrentTab('dashboard');
+  };
+
   // Add Team Member to Organization
   const handleAddTeamMember = (memberData: Omit<TeamMember, 'id' | 'joinedDate'>) => {
     const newMember: TeamMember = {
@@ -318,6 +354,11 @@ export default function App() {
     setActiveTimerTaskId(null);
   };
 
+  // Initial Application Loading Screen
+  if (isLoading) {
+    return <LoadingScreen onFinished={() => setIsLoading(false)} />;
+  }
+
   // Step 1 Gate: If user is not signed in, show mandatory Auth / Registration screen
   if (!user.isSignedIn) {
     return <AuthScreen onSignIn={(newUser) => setUser(newUser)} />;
@@ -348,6 +389,7 @@ export default function App() {
         isOrgAdmin={user.accountType === 'OrgAdmin' || user.orgRole === 'Admin'}
         userName={user.name}
         userAvatar={user.avatar}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area (Offset by 64px / lg:ml-64 for fixed sidebar) */}
@@ -358,6 +400,8 @@ export default function App() {
           onToggleMobileSidebar={() => setIsOpenMobileSidebar(!isOpenMobileSidebar)}
           user={user}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          onOpenProfile={() => setCurrentTab('profile')}
+          onLogout={handleLogout}
           onOpenAddTask={() => {
             setTaskToEdit(null);
             setIsAddTaskOpen(true);
@@ -466,8 +510,34 @@ export default function App() {
             />
           )}
 
-          {/* Other navigation tabs fallback to Dashboard */}
-          {(currentTab === 'calendar' || currentTab === 'settings') && (
+          {/* Dedicated User Profile Page */}
+          {currentTab === 'profile' && (
+            <ProfileView
+              user={user}
+              onUpdateUser={setUser}
+              organization={organization}
+              teamMembers={teamMembers}
+              tasks={tasks}
+              onNavigateTab={setCurrentTab}
+              onToggleTimer={handleToggleTimer}
+              activeTimerTaskId={activeTimerTaskId}
+              onLogout={handleLogout}
+            />
+          )}
+
+          {/* Dedicated Settings & Preferences Page */}
+          {currentTab === 'settings' && (
+            <SettingsView 
+              user={user} 
+              themeMode={themeMode}
+              setThemeMode={setThemeMode}
+              accentColor={accentColor}
+              setAccentColor={setAccentColor}
+            />
+          )}
+
+          {/* Calendar tab fallback to Dashboard */}
+          {currentTab === 'calendar' && (
             <DashboardView
               tasks={tasks}
               activeTimerTaskId={activeTimerTaskId}

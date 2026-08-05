@@ -1,11 +1,13 @@
 import React from 'react';
-import { Search, Bell, HelpCircle, Menu, Sparkles, Plus, CheckCircle2, Pause } from 'lucide-react';
+import { Search, Bell, HelpCircle, Menu, Sparkles, Plus, CheckCircle2, Pause, LogOut } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface TopBarProps {
   onToggleMobileSidebar: () => void;
   user: UserProfile;
   onOpenAuthModal: () => void;
+  onOpenProfile?: () => void;
+  onLogout?: () => void;
   onOpenAddTask: () => void;
   onOpenAiModal: () => void;
   isTimerRunning?: boolean;
@@ -18,6 +20,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   onToggleMobileSidebar,
   user,
   onOpenAuthModal,
+  onOpenProfile,
+  onLogout,
   onOpenAddTask,
   onOpenAiModal,
   isTimerRunning,
@@ -115,8 +119,9 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* User Profile Button */}
         <button
-          onClick={onOpenAuthModal}
-          className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-100 transition-all text-left shrink-0"
+          onClick={() => onOpenProfile ? onOpenProfile() : onOpenAuthModal()}
+          className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-100 transition-all text-left shrink-0 cursor-pointer"
+          title="Open Full Profile Page"
         >
           <div className="relative shrink-0">
             <img
@@ -136,6 +141,8 @@ export const TopBar: React.FC<TopBarProps> = ({
             </div>
           </div>
         </button>
+
+
 
       </div>
 

@@ -11,6 +11,7 @@ interface HeaderProps {
   onToggleActiveTimer?: () => void;
   user: UserProfile;
   onOpenAuthModal: () => void;
+  onOpenProfile?: () => void;
   onOpenAddTask: () => void;
   onOpenAiModal: () => void;
   onSeedData: () => void;
@@ -25,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleActiveTimer,
   user,
   onOpenAuthModal,
+  onOpenProfile,
   onOpenAddTask,
   onOpenAiModal,
   onSeedData,
@@ -155,9 +157,9 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Auth / Profile button */}
           <button
-            onClick={onOpenAuthModal}
-            className="flex items-center gap-2 pl-2 pr-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 transition-all"
-            title={user.isSignedIn ? `Signed in as ${user.email}` : "Sign In / Account"}
+            onClick={() => onOpenProfile ? onOpenProfile() : onOpenAuthModal()}
+            className="flex items-center gap-2 pl-2 pr-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 transition-all cursor-pointer"
+            title={user.isSignedIn ? `View Profile (${user.email})` : "Sign In / Account"}
           >
             <img
               src={user.avatar}

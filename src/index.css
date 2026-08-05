@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -7,9 +9,323 @@
 
 * {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .font-mono {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
 }
+
+/* Base Root Themes */
+html, body {
+  min-height: 100vh;
+}
+
+/* LIGHT THEME */
+html.light, html.light body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* MIDNIGHT ULTRA DARK THEME */
+html.dark, 
+html.dark body,
+html.dark #root,
+html.dark .min-h-screen,
+html.dark main {
+  background-color: #030712 !important; /* Deep pitch-black midnight canvas */
+  color: #ffffff !important;
+}
+
+/* Sidebar, Header, Modals and Main Cards */
+html.dark aside,
+html.dark header,
+html.dark .bg-white,
+html.dark [class*="bg-white"] {
+  background-color: #0f172a !important; /* Rich Slate-900 */
+  color: #ffffff !important;
+  border-color: #1e293b !important;
+}
+
+/* Dark Mode Gradient Card Overrides */
+html.dark [class*="from-blue-50"],
+html.dark [class*="via-indigo-50"] {
+  background-image: linear-gradient(to bottom right, #1e293b, #0f172a) !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+/* Raised Insets, Sub-Cards, Segment Buttons and Inner Containers */
+html.dark .dark\:bg-transparent,
+html.dark [class*="dark:bg-transparent"] {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+html.dark div.bg-slate-50,
+html.dark span.bg-slate-50,
+html.dark button.bg-slate-50,
+html.dark .bg-slate-50,
+html.dark [class*="bg-slate-50"],
+html.dark [class*="bg-[#F7F7F4]"],
+html.dark [class*="bg-[#f7f7f4]"],
+html.dark [class*="bg-[#F0F0EC]"],
+html.dark [class*="bg-[#f0f0ec]"] {
+  background-color: #0f172a !important; /* Solid pitch dark card background - no grey */
+  color: #ffffff !important;
+  border-color: #1e293b !important;
+}
+
+/* Elevated white boxes inside sub-containers in Dark Mode */
+html.dark [class*="bg-slate-50"] .bg-white,
+html.dark [class*="bg-slate-50"] [class*="bg-white"] {
+  background-color: #1e293b !important; /* Elevated dark slate box */
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+html.dark .bg-slate-100 {
+  background-color: #27354a !important; /* Slate-750 */
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+html.dark .bg-slate-200 {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+  border-color: #475569 !important;
+}
+
+html.dark .bg-slate-300 {
+  background-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+/* Hardcoded Dark Text Overrides in Dark Mode (e.g. #15181D, #0f172a, #1e293b, #4B4F58) */
+html.dark [class*="text-[#15181D]"],
+html.dark [class*="text-[#15181d]"],
+html.dark [class*="text-[#4B4F58]"],
+html.dark [class*="text-[#4b4f58]"],
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-slate-600,
+html.dark .text-black {
+  color: #ffffff !important;
+}
+
+/* Secondary Gray Labels in Dark Mode (e.g. #8A8E97, slate-500, slate-400) */
+html.dark [class*="text-[#8A8E97]"],
+html.dark [class*="text-[#8a8e97]"],
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #cbd5e1 !important; /* Crisp light slate for secondary labels */
+}
+
+/* Hardcoded Light Borders in Dark Mode */
+html.dark [class*="border-[#E4E4DF]"],
+html.dark [class*="border-[#e4e4df]"],
+html.dark [class*="border-[#F0F0EC]"],
+html.dark [class*="border-[#f0f0ec]"],
+html.dark [class*="divide-[#F0F0EC]"] > * + *,
+html.dark [class*="divide-[#f0f0ec]"] > * + *,
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/90,
+html.dark .divide-slate-100 > * + * {
+  border-color: #27354a !important;
+}
+
+/* Inputs, Selects, Textareas in Dark Mode */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #090d16 !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Action Buttons in Dark Mode */
+html.dark button.bg-slate-900,
+html.dark button.bg-black {
+  background-color: #3C83F6 !important;
+  color: #ffffff !important;
+}
+
+html.dark button.bg-slate-900:hover,
+html.dark button.bg-black:hover {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+html.dark div.bg-slate-900,
+html.dark div.bg-black {
+  background-color: #0b0f19 !important;
+  color: #ffffff !important;
+  border-color: #1e293b !important;
+}
+
+html.dark .bg-slate-800 {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+/* Badges & Soft Colored Containers in Dark Mode */
+html.dark .bg-blue-50,
+html.dark [class*="bg-[#EAEEFF]"],
+html.dark [class*="bg-[#eaeeff]"] {
+  background-color: rgba(37, 99, 235, 0.25) !important;
+  color: #60a5fa !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+html.dark .text-\[\#3C83F6\],
+html.dark .text-\[\#2E4CFF\],
+html.dark .text-[#2e4cff],
+html.dark .text-blue-600,
+html.dark .text-blue-500 {
+  color: #60a5fa !important;
+}
+
+html.dark .border-blue-100,
+html.dark .border-blue-200 {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+html.dark .bg-emerald-50,
+html.dark [class*="bg-[#E6F6EF]"],
+html.dark [class*="bg-[#e6f6ef]"] {
+  background-color: rgba(16, 185, 129, 0.25) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+html.dark .text-emerald-600,
+html.dark .text-emerald-500,
+html.dark .text-\[\#1F9D6B\],
+html.dark .text-[#1f9d6b] {
+  color: #34d399 !important;
+}
+
+html.dark .bg-purple-50 {
+  background-color: rgba(168, 85, 247, 0.25) !important;
+  color: #c084fc !important;
+  border-color: rgba(168, 85, 247, 0.4) !important;
+}
+
+html.dark .text-purple-600,
+html.dark .text-purple-500 {
+  color: #c084fc !important;
+}
+
+html.dark .bg-amber-50,
+html.dark [class*="bg-[#FBEEE1]"],
+html.dark [class*="bg-[#fbeee1]"] {
+  background-color: rgba(245, 158, 11, 0.25) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+html.dark .text-amber-600,
+html.dark .text-amber-500,
+html.dark .text-\[\#E8862B\],
+html.dark .text-[#e8862b] {
+  color: #fbbf24 !important;
+}
+
+html.dark .bg-indigo-50,
+html.dark [class*="bg-indigo-50"] {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #1e293b !important;
+}
+
+html.dark .text-indigo-950 {
+  color: #ffffff !important;
+}
+
+html.dark .text-indigo-600,
+html.dark .text-indigo-500 {
+  color: #818cf8 !important;
+}
+
+/* Hover States in Dark Mode */
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-100\/80:hover,
+html.dark [class*="hover:bg-[#F7F7F4]"]:hover {
+  background-color: #27354a !important;
+  color: #ffffff !important;
+}
+
+html.dark .hover\:bg-slate-200:hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+}
+
+html.dark .hover\:text-slate-900:hover,
+html.dark .hover\:text-slate-700:hover,
+html.dark [class*="hover:text-[#15181D]"]:hover {
+  color: #ffffff !important;
+}
+
+/* SUNSET WARM THEME */
+html.sunset, html.sunset body {
+  background-color: #fcf7f2;
+  color: #2d221e;
+}
+
+html.sunset .bg-slate-50 {
+  background-color: #f7ebe1 !important;
+  color: #2d221e !important;
+  border-color: #ebd3c5 !important;
+}
+
+html.sunset .bg-white {
+  background-color: #fffaf7 !important;
+  color: #2d221e !important;
+  border-color: #f2dfd5 !important;
+}
+
+html.sunset .text-slate-900,
+html.sunset .text-slate-800 {
+  color: #2d221e !important;
+}
+
+html.sunset .text-slate-700,
+html.sunset .text-slate-600 {
+  color: #5c443e !important;
+}
+
+html.sunset .border-slate-100,
+html.sunset .border-slate-200,
+html.sunset .border-slate-200\/90,
+html.sunset .divide-slate-100 > * + * {
+  border-color: #f0d8cc !important;
+}
+
+html.sunset .bg-slate-100 {
+  background-color: #f3e2d5 !important;
+  color: #2d221e !important;
+}
+
+html.sunset input,
+html.sunset select,
+html.sunset textarea {
+  background-color: #f7ebe1 !important;
+  color: #2d221e !important;
+  border-color: #ebd3c5 !important;
+}
+
+
+
+
+
+
 

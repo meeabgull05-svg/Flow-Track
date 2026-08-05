@@ -15,6 +15,8 @@ import {
   Zap,
   Building2,
   Users,
+  User,
+  LogOut,
   X
 } from 'lucide-react';
 
@@ -27,6 +29,7 @@ export type NavTab =
   | 'analytics' 
   | 'reports' 
   | 'goals' 
+  | 'profile' 
   | 'settings' 
   | 'yearHistory' 
   | 'codeGuide' 
@@ -42,6 +45,7 @@ interface SidebarProps {
   isOrgAdmin?: boolean;
   userAvatar?: string;
   userName?: string;
+  onLogout?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -53,7 +57,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   orgName = 'Northline Design',
   isOrgAdmin = true,
   userAvatar = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-  userName = 'Sara Ahmed'
+  userName = 'Sara Ahmed',
+  onLogout
 }) => {
   const mainNavItems = [
     { id: 'dashboard' as NavTab, label: 'Dashboard', icon: LayoutDashboard },
@@ -186,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           {/* Bottom Section: Upgrade Card & User Row */}
-          <div className="p-3.5 space-y-3 shrink-0 border-t border-slate-100 bg-slate-50/50">
+          <div className="p-3.5 space-y-3 shrink-0 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-transparent">
             
             {/* Pro Upgrade Box */}
             <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-indigo-50/60 to-white border border-blue-100 shadow-2xs relative overflow-hidden">
@@ -199,6 +204,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 Unlimited projects, budget alerts and priority support.
               </p>
               <button
+                type="button"
                 onClick={onOpenAiModal}
                 className="w-full py-2 bg-[#3C83F6] hover:bg-[#2563eb] text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 relative z-10 cursor-pointer"
               >
@@ -206,19 +212,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </div>
 
-            {/* User Profile Row */}
-            <div className="flex items-center gap-2.5 pt-1 px-1">
-              <img
-                src={userAvatar}
-                alt={userName}
-                referrerPolicy="no-referrer"
-                className="w-8.5 h-8.5 rounded-full object-cover ring-2 ring-blue-100 bg-blue-50"
-              />
-              <div className="min-w-0 flex-1">
-                <b className="text-xs font-bold text-slate-900 block truncate">{userName}</b>
-                <span className="text-[11px] text-slate-500 font-medium block truncate">{orgName}</span>
-              </div>
-            </div>
+
 
           </div>
 

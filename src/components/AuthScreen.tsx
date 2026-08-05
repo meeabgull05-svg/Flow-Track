@@ -14,6 +14,7 @@ import {
   ArrowRight,
   ArrowLeft, 
   Clock, 
+  Timer,
   CheckCircle2, 
   Zap, 
   Eye, 
@@ -261,18 +262,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
       <header className="border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 lg:px-10 py-2.5 flex items-center justify-between shadow-2xs">
         <div className="flex items-center gap-6 lg:gap-8 min-w-0">
           <div className="flex items-center gap-2.5 cursor-pointer shrink-0" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-8 h-8 rounded-xl bg-[#3C83F6] flex items-center justify-center text-white shadow-md shadow-[#3C83F6]/25 font-black text-base shrink-0">
-              F
+            <div className="w-8.5 h-8.5 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-[#3C83F6] shrink-0">
+              <Timer className="w-4.5 h-4.5" />
             </div>
             <div className="flex flex-col justify-center">
-              <div className="text-xs sm:text-sm font-black text-slate-900 tracking-tight flex items-center gap-1.5 whitespace-nowrap leading-none">
-                <span>FlowTrack</span>
+              <div className="text-base sm:text-lg font-serif font-bold text-slate-900 tracking-tight flex items-center gap-1.5 whitespace-nowrap leading-none">
+                <span>Flow Track</span>
                 <span className="px-1.5 py-0.5 rounded text-[8.5px] font-mono font-bold bg-blue-50 text-[#3C83F6] border border-blue-200/80">
                   PRO
                 </span>
-              </div>
-              <div className="text-[9.5px] text-slate-500 font-medium whitespace-nowrap mt-0.5">
-                Work & Time Engine
               </div>
             </div>
           </div>
@@ -1168,11 +1166,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
       <footer className="border-t border-slate-200/80 bg-white py-10 px-6 lg:px-12 text-slate-600 text-xs">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#3C83F6] flex items-center justify-center text-white font-black">
-                F
+            <div className="flex items-center gap-2.5">
+              <div className="w-8.5 h-8.5 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-[#3C83F6] shrink-0">
+                <Timer className="w-4.5 h-4.5" />
               </div>
-              <span className="font-black text-slate-900 text-sm">FlowTrack PRO ORG</span>
+              <span className="font-serif text-base font-bold text-slate-900">Flow Track</span>
             </div>
             <p className="text-slate-500 text-[11px] leading-relaxed">
               High-precision stopwatch and task management platform for schools, universities, tech teams, and agencies.
@@ -1406,40 +1404,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
                       ? 'Enter your credentials to manage active timers and tasks.'
                       : 'Register your school or organization workspace for free.'}
                   </p>
-                </div>
-
-                {/* Quick Demo Login Preset Buttons */}
-                <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 space-y-1.5">
-                  <div className="text-[9px] font-extrabold text-[#3C83F6] uppercase tracking-wider flex items-center justify-between">
-                    <span>⚡ 1-Click Demo Logins</span>
-                    <span className="bg-blue-100 text-[#3C83F6] px-1.5 py-0.5 rounded text-[8px]">Test Mode</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleDemoLogin('admin')}
-                      className="px-2 py-1 bg-white hover:bg-blue-50 text-slate-800 hover:text-[#3C83F6] border border-blue-200/80 rounded-lg text-[10px] font-extrabold shadow-2xs transition-all cursor-pointer text-center truncate"
-                      title="Log in as School Principal / Org Admin"
-                    >
-                      👑 Admin
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDemoLogin('member')}
-                      className="px-2 py-1 bg-white hover:bg-blue-50 text-slate-800 hover:text-[#3C83F6] border border-blue-200/80 rounded-lg text-[10px] font-extrabold shadow-2xs transition-all cursor-pointer text-center truncate"
-                      title="Log in as Faculty / Team Member"
-                    >
-                      👩‍🏫 Teacher
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDemoLogin('guest')}
-                      className="px-2 py-1 bg-white hover:bg-blue-50 text-slate-800 hover:text-[#3C83F6] border border-blue-200/80 rounded-lg text-[10px] font-extrabold shadow-2xs transition-all cursor-pointer text-center truncate"
-                      title="Log in as Individual Guest"
-                    >
-                      👤 Student
-                    </button>
-                  </div>
                 </div>
 
                 {/* Account Type Selector (Only in Signup Mode) */}
