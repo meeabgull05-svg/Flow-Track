@@ -506,7 +506,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
       </section>
 
       {/* How It Works in 3 Steps Section */}
-      <section id="workflow" className="py-20 px-6 lg:px-12 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/80 border-t border-slate-200/80">
+      <section id="workflow" className="py-20 px-6 lg:px-12 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/80 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 border-t border-slate-200/80 dark:border-slate-800">
         <div className="max-w-7xl mx-auto space-y-12">
           
           <div className="text-center max-w-2xl mx-auto space-y-3">

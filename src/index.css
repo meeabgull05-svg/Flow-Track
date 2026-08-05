@@ -79,25 +79,25 @@ html.dark [class*="bg-[#f0f0ec]"] {
 /* Elevated white boxes inside sub-containers in Dark Mode */
 html.dark [class*="bg-slate-50"] .bg-white,
 html.dark [class*="bg-slate-50"] [class*="bg-white"] {
-  background-color: #1e293b !important; /* Elevated dark slate box */
+  background-color: #0f172a !important; /* Rich pitch dark slate box */
   color: #ffffff !important;
-  border-color: #334155 !important;
+  border-color: #1e293b !important;
 }
 
 html.dark .bg-slate-100 {
-  background-color: #27354a !important; /* Slate-750 */
+  background-color: #0b0f19 !important; /* Solid dark background */
   color: #ffffff !important;
-  border-color: #334155 !important;
+  border-color: #1e293b !important;
 }
 
 html.dark .bg-slate-200 {
-  background-color: #334155 !important;
+  background-color: #0f172a !important;
   color: #ffffff !important;
-  border-color: #475569 !important;
+  border-color: #1e293b !important;
 }
 
 html.dark .bg-slate-300 {
-  background-color: #475569 !important;
+  background-color: #1e293b !important;
   color: #ffffff !important;
 }
 
@@ -135,7 +135,7 @@ html.dark .border-slate-300,
 html.dark .border-slate-200\/80,
 html.dark .border-slate-200\/90,
 html.dark .divide-slate-100 > * + * {
-  border-color: #27354a !important;
+  border-color: #1e293b !important;
 }
 
 /* Inputs, Selects, Textareas in Dark Mode */
@@ -321,6 +321,49 @@ html.sunset textarea {
   background-color: #f7ebe1 !important;
   color: #2d221e !important;
   border-color: #ebd3c5 !important;
+}
+
+/* UI Density Layout Rules */
+html[data-density="compact"],
+html.density-compact {
+  font-size: 14.5px;
+}
+
+html[data-density="compact"] .space-y-6 > * + * {
+  margin-top: 1rem !important;
+}
+
+html[data-density="compact"] .p-6 {
+  padding: 1.125rem !important;
+}
+
+html[data-density="compact"] .p-5 {
+  padding: 0.875rem !important;
+}
+
+html[data-density="compact"] .p-4 {
+  padding: 0.75rem !important;
+}
+
+html[data-density="spacious"],
+html.density-spacious {
+  font-size: 16.5px;
+}
+
+html[data-density="spacious"] .space-y-6 > * + * {
+  margin-top: 2rem !important;
+}
+
+html[data-density="spacious"] .p-6 {
+  padding: 1.875rem !important;
+}
+
+html[data-density="spacious"] .p-5 {
+  padding: 1.625rem !important;
+}
+
+html[data-density="spacious"] .p-4 {
+  padding: 1.375rem !important;
 }
 
 

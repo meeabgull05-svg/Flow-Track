@@ -37,6 +37,10 @@ export default function App() {
     return localStorage.getItem('flowtrack_accent_color') || '#3C83F6';
   });
 
+  const [density, setDensity] = useState<'compact' | 'comfortable' | 'spacious'>(() => {
+    return (localStorage.getItem('flowtrack_ui_density') as any) || 'comfortable';
+  });
+
   useEffect(() => {
     try {
       const root = document.documentElement;
@@ -48,10 +52,15 @@ export default function App() {
       } else {
         root.classList.add(themeMode);
       }
+
+      root.setAttribute('data-density', density);
+      root.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
+      root.classList.add(`density-${density}`);
+      localStorage.setItem('flowtrack_ui_density', density);
     } catch (e) {
       console.error(e);
     }
-  }, [themeMode]);
+  }, [themeMode, density]);
 
   // Categories & User Profile
   const [categories] = useState<Category[]>(DEFAULT_CATEGORIES);
@@ -533,6 +542,8 @@ export default function App() {
               setThemeMode={setThemeMode}
               accentColor={accentColor}
               setAccentColor={setAccentColor}
+              density={density}
+              setDensity={setDensity}
             />
           )}
 

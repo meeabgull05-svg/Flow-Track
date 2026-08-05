@@ -27,6 +27,8 @@ interface SettingsViewProps {
   setThemeMode?: (mode: 'light' | 'dark' | 'sunset' | 'system') => void;
   accentColor?: string;
   setAccentColor?: (color: string) => void;
+  density?: 'compact' | 'comfortable' | 'spacious';
+  setDensity?: (density: 'compact' | 'comfortable' | 'spacious') => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ 
@@ -34,7 +36,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   themeMode: propThemeMode,
   setThemeMode: propSetThemeMode,
   accentColor: propAccentColor,
-  setAccentColor: propSetAccentColor
+  setAccentColor: propSetAccentColor,
+  density: propDensity,
+  setDensity: propSetDensity
 }) => {
   // Theme Mode local or lifted state
   const [localThemeMode, setLocalThemeMode] = useState<'light' | 'dark' | 'sunset' | 'system'>(() => {
@@ -63,9 +67,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   // UI Density
-  const [density, setDensity] = useState<'compact' | 'comfortable' | 'spacious'>(() => {
+  const [localDensity, setLocalDensity] = useState<'compact' | 'comfortable' | 'spacious'>(() => {
     return (localStorage.getItem('flowtrack_ui_density') as any) || 'comfortable';
   });
+
+  const density = propDensity ?? localDensity;
+  const handleDensityChange = (d: 'compact' | 'comfortable' | 'spacious') => {
+    if (propSetDensity) {
+      propSetDensity(d);
+    }
+    setLocalDensity(d);
+    localStorage.setItem('flowtrack_ui_density', d);
+    try {
+      const root = document.documentElement;
+      root.setAttribute('data-density', d);
+      root.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
+      root.classList.add(`density-${d}`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Timer Preferences
   const [defaultEstimateMinutes, setDefaultEstimateMinutes] = useState<number>(30);
@@ -113,7 +134,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const handleResetDefaults = () => {
     handleThemeChange('light');
     handleAccentChange('#3C83F6');
-    setDensity('comfortable');
+    handleDensityChange('comfortable');
     setDefaultEstimateMinutes(30);
     setAutoPauseIdle(true);
     setSoundEnabled(true);
@@ -317,7 +338,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                   key={d}
                   type="button"
-                  onClick={() => setDensity(d)}
+                  onClick={() => handleDensityChange(d)}
                   className={`py-2 px-3 rounded-xl border text-xs font-bold capitalize transition-all cursor-pointer text-center ${
                     density === d
                       ? 'border-[#3C83F6] bg-blue-50 text-[#3C83F6]'
