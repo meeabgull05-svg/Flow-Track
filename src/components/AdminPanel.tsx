@@ -48,7 +48,7 @@ export const AdminPanel: React.FC = () => {
         setUsers(json.data);
         setErrorMessage('');
       } else {
-        setErrorMessage(json.message || 'Failed to retrieve logs.');
+        setErrorMessage(json.error || json.message || 'Failed to retrieve logs.');
       }
     } catch (err: any) {
       setErrorMessage('Could not connect to the database. Make sure MONGO_URI is set correctly.');
@@ -195,7 +195,7 @@ export const AdminPanel: React.FC = () => {
             <AlertCircle className="w-5 h-5 shrink-0 text-red-400 mt-0.5" />
             <div className="text-xs font-bold space-y-1">
               <p>{errorMessage}</p>
-              <p className="text-slate-400 font-medium">Please verify that you have added the correct <code className="text-slate-200 bg-slate-800 px-1 rounded font-mono">MONGO_URI</code> environment variable inside your Vercel Project settings dashboard.</p>
+              <p className="text-slate-400 font-medium">If this is an IP whitelist error, go to MongoDB Atlas <ChevronRight className="inline w-3 h-3" /> Security <ChevronRight className="inline w-3 h-3" /> Network Access and allow access from anywhere (0.0.0.0/0). Otherwise, verify your <code className="text-slate-200 bg-slate-800 px-1 rounded font-mono">MONGO_URI</code> is correct.</p>
             </div>
           </div>
         )}
