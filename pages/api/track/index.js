@@ -1,5 +1,5 @@
-import connectDB from '../../../lib/db.js';
-import Track from '../../../models/Track.js';
+import connectDB from '../../../lib/db';
+import Track from '../../../models/Track';
 
 export default async function handler(req, res) {
   await connectDB();
