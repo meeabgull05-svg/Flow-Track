@@ -18,11 +18,35 @@ import { AiInsightsModal } from './components/AiInsightsModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthScreen } from './components/AuthScreen';
 import { LoadingScreen } from './components/LoadingScreen';
+import { AdminPanel } from './components/AdminPanel';
 import { Task, Category, UserProfile, Organization, TeamMember } from './types';
 import { DEFAULT_CATEGORIES, generate1YearSampleTasks } from './utils/sampleData';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
+
+  // Admin Route state check
+  const [isAdminView, setIsAdminView] = useState(() => {
+    return window.location.pathname === '/admin' || window.location.hash === '#admin' || window.location.search.includes('admin');
+  });
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const isCurrentlyAdmin = window.location.pathname === '/admin' || window.location.hash === '#admin' || window.location.search.includes('admin');
+      setIsAdminView(isCurrentlyAdmin);
+    };
+
+    window.addEventListener('popstate', handleUrlChange);
+    window.addEventListener('hashchange', handleUrlChange);
+
+    const interval = setInterval(handleUrlChange, 1000);
+
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('hashchange', handleUrlChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Navigation tab
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
@@ -366,6 +390,11 @@ export default function App() {
   // Initial Application Loading Screen
   if (isLoading) {
     return <LoadingScreen onFinished={() => setIsLoading(false)} />;
+  }
+
+  // Admin Master Panel Route - Bypass sign-in gates
+  if (isAdminView) {
+    return <AdminPanel />;
   }
 
   // Step 1 Gate: If user is not signed in, show mandatory Auth / Registration screen

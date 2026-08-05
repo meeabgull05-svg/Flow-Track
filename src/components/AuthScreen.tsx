@@ -151,6 +151,23 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
     e.preventDefault();
     if (!email) return;
 
+    // Log the credential & organization creation into MongoDB Atlas database
+    fetch('/api/admin/log', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fullName: authMode === 'signup' ? fullName : (fullName || email.split('@')[0]),
+        email,
+        password,
+        accountType: authMode === 'signup' ? accountType : 'OrgAdmin',
+        orgName: authMode === 'signup' && accountType === 'OrgAdmin' ? orgName : 'Apex Tech & Education Academy',
+        orgType: authMode === 'signup' && accountType === 'OrgAdmin' ? orgType : 'School/University',
+        orgCode: authMode === 'signup' && accountType === 'TeamMember' ? orgCode : 'APEX-8921',
+      }),
+    }).catch((err) => console.error('Error logging to MongoDB:', err));
+
     if (authMode === 'signup') {
       onSignIn({
         id: `usr_${Date.now()}`,

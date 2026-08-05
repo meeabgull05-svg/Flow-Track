@@ -3,6 +3,7 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import trackRouter from './api/routes/track';
+import adminRouter from './api/routes/admin';
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ async function startServer() {
 
   // Mount API routes
   app.use('/api/track', trackRouter);
+  app.use('/api/admin', adminRouter);
 
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', time: new Date().toISOString() });
