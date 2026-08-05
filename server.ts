@@ -7,21 +7,20 @@ import adminRouter from './api/routes/admin';
 
 dotenv.config();
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const app = express();
+const PORT = 3000;
 
-  app.use(express.json());
+app.use(express.json());
 
-  // Mount API routes
-  app.use('/api/track', trackRouter);
-  app.use('/api/admin', adminRouter);
+// Mount API routes
+app.use('/api/track', trackRouter);
+app.use('/api/admin', adminRouter);
 
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', time: new Date().toISOString() });
-  });
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
-  // Vite middleware for development vs static serve for production
+async function setupVite() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -35,10 +34,14 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
+}
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[FlowTrack Server] Server running on http://0.0.0.0:${PORT}`);
+if (!process.env.VERCEL) {
+  setupVite().then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`[FlowTrack Server] Server running on http://0.0.0.0:${PORT}`);
+    });
   });
 }
 
-startServer();
+export default app;
