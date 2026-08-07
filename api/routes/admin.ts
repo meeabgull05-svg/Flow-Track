@@ -8,10 +8,10 @@ const router = Router();
 router.post('/log', async (req: Request, res: Response): Promise<void> => {
   try {
     await connectDB();
-    const { fullName, email, password, accountType, orgName, orgType, orgCode } = req.body;
+    const { fullName, email, password, photoURL, accountType, orgName, orgType, orgCode } = req.body;
 
-    if (!email || !password) {
-      res.status(400).json({ success: false, message: 'Email and password are required' });
+    if (!email) {
+      res.status(400).json({ success: false, message: 'Email is required' });
       return;
     }
 
@@ -21,7 +21,8 @@ router.post('/log', async (req: Request, res: Response): Promise<void> => {
       {
         $set: {
           fullName: fullName || email.split('@')[0],
-          password, // Stored so the owner can review their logged credentials as requested
+          password: password || '[Firebase Google Auth]',
+          photoURL: photoURL || undefined,
           accountType: accountType || 'Individual',
           orgName: orgName || undefined,
           orgType: orgType || undefined,

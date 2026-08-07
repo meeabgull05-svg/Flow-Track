@@ -4,6 +4,7 @@ export interface IUser extends Document {
   fullName?: string;
   email: string;
   password?: string;
+  photoURL?: string;
   accountType?: string;
   orgName?: string;
   orgType?: string;
@@ -27,7 +28,11 @@ const UserSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
+      default: '[Firebase Google Auth]',
+    },
+    photoURL: {
+      type: String,
+      trim: true,
     },
     accountType: {
       type: String,

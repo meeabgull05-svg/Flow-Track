@@ -194,46 +194,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <ArrowLeft className="w-4 h-4 text-[#3C83F6]" />
           <span>Back to Dashboard</span>
         </button>
-
-        {/* Live Role Switcher Banner */}
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-2">
-            Demo Mode View:
-          </span>
-          <button
-            type="button"
-            onClick={() => handleRoleSwitch('Admin')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              isAdmin
-                ? 'bg-[#3C83F6] text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 bg-white/60'
-            }`}
-          >
-            <span>👑 Admin</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleRoleSwitch('Member')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              !isAdmin && user.role.includes('Faculty')
-                ? 'bg-[#3C83F6] text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 bg-white/60'
-            }`}
-          >
-            <span>👩‍🏫 Faculty / Member</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleRoleSwitch('Student')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              !isAdmin && user.role.includes('Student')
-                ? 'bg-[#3C83F6] text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 bg-white/60'
-            }`}
-          >
-            <span>👤 Student</span>
-          </button>
-        </div>
       </div>
 
       {/* Main Profile Header Card (Exact match to User Image request!) */}
