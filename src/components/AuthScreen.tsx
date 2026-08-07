@@ -167,6 +167,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
       try {
         (window as any).google.accounts.id.initialize({
           client_id: '1082987114881-samplegoogleappid.apps.googleusercontent.com',
+          auto_select: true,
           callback: (response: any) => {
             if (response.credential) {
               try {
@@ -178,6 +179,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
                 console.error('Error parsing Google JWT:', e);
               }
             }
+          }
+        });
+        (window as any).google.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            console.log('Google One Tap notice:', notification.getNotDisplayedReason());
           }
         });
       } catch (e) {
