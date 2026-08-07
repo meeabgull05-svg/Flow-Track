@@ -159,18 +159,20 @@ export default function App() {
     fetchRealTimeUsers();
   }, [user.isSignedIn, fetchRealTimeUsers]);
 
-  // Tasks state with LocalStorage persistence
+  // Tasks state with per-user LocalStorage persistence
   const [tasks, setTasks] = useState<Task[]>(() => {
     try {
-      const saved = localStorage.getItem('flowtrack_tasks_v1');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (user?.email) {
+        const saved = localStorage.getItem(`flowtrack_tasks_${user.email.toLowerCase().trim()}`);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) return parsed;
+        }
       }
     } catch (err) {
       console.error('Failed to parse saved tasks:', err);
     }
-    return generate1YearSampleTasks();
+    return [];
   });
 
   // Active Timer State
@@ -182,14 +184,39 @@ export default function App() {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  // Save tasks to LocalStorage on change
+  // Sync tasks state when user email changes
   useEffect(() => {
+    if (!user?.email || !user.isSignedIn) {
+      setTasks([]);
+      return;
+    }
+    const key = `flowtrack_tasks_${user.email.toLowerCase().trim()}`;
     try {
-      localStorage.setItem('flowtrack_tasks_v1', JSON.stringify(tasks));
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setTasks(parsed);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Error loading tasks for email:', err);
+    }
+    // New email account: start fresh with zero pre-added tasks/time
+    setTasks([]);
+  }, [user.email, user.isSignedIn]);
+
+  // Save tasks to LocalStorage per user email on change
+  useEffect(() => {
+    if (!user?.email || !user.isSignedIn) return;
+    const key = `flowtrack_tasks_${user.email.toLowerCase().trim()}`;
+    try {
+      localStorage.setItem(key, JSON.stringify(tasks));
     } catch (err) {
       console.error('Failed to save tasks to local storage:', err);
     }
-  }, [tasks]);
+  }, [tasks, user.email, user.isSignedIn]);
 
   // Live Timer Interval Engine (1 second updates)
   useEffect(() => {

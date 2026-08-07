@@ -54,99 +54,54 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
   activeTimerTaskId,
   user
 }) => {
-  // Initial sample projects list
-  const [projectsList, setProjectsList] = useState<ProjectItem[]>([
-    {
-      id: 'proj_1',
-      name: 'FlowTrack Website Redesign',
-      category: 'UI/UX Design',
-      description: 'Modern web app UI redesign with responsive design system, dark mode tokens, and user dashboard.',
-      color: 'bg-[#635BFF]',
-      status: 'In Progress',
-      totalHoursSpent: 32.5,
-      estimatedHours: 45,
-      membersCount: 4,
-      membersAvatars: [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80'
-      ],
-      dueDate: 'Jun 15, 2024',
-      completedTasks: 18,
-      totalTasks: 24
-    },
-    {
-      id: 'proj_2',
-      name: 'WeVersity Platform',
-      category: 'Full-Stack Web',
-      description: 'Educational learning management system with course video streaming, quiz engine, and certificates.',
-      color: 'bg-emerald-500',
-      status: 'In Progress',
-      totalHoursSpent: 58.0,
-      estimatedHours: 80,
-      membersCount: 6,
-      membersAvatars: [
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=80'
-      ],
-      dueDate: 'Jul 01, 2024',
-      completedTasks: 27,
-      totalTasks: 32
-    },
-    {
-      id: 'proj_3',
-      name: 'Client Analytics Dashboard',
-      category: 'Frontend App',
-      description: 'Real-time analytical dashboard with customizable widgets, CSV exports, and Google Cloud integrations.',
-      color: 'bg-blue-500',
-      status: 'In Progress',
-      totalHoursSpent: 18.2,
-      estimatedHours: 30,
-      membersCount: 3,
-      membersAvatars: [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80'
-      ],
-      dueDate: 'May 30, 2024',
-      completedTasks: 9,
-      totalTasks: 15
-    },
-    {
-      id: 'proj_4',
-      name: 'Mobile App Design System',
-      category: 'Mobile Design',
-      description: 'Cross-platform mobile UI kit for iOS and Android featuring 50+ re-usable Figma components.',
-      color: 'bg-amber-500',
-      status: 'On Hold',
-      totalHoursSpent: 24.0,
-      estimatedHours: 50,
-      membersCount: 2,
-      membersAvatars: [
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'
-      ],
-      dueDate: 'Aug 10, 2024',
-      completedTasks: 8,
-      totalTasks: 20
-    },
-    {
-      id: 'proj_5',
-      name: 'E-Commerce Checkout Optimization',
-      category: 'Conversion API',
-      description: 'Stripe payments flow redesign with 1-click checkout, local currency conversion, and fraud prevention.',
-      color: 'bg-purple-600',
-      status: 'Completed',
-      totalHoursSpent: 42.0,
-      estimatedHours: 40,
-      membersCount: 5,
-      membersAvatars: [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80'
-      ],
-      dueDate: 'May 10, 2024',
-      completedTasks: 16,
-      totalTasks: 16
+  // User-specific projects list
+  const [projectsList, setProjectsList] = useState<ProjectItem[]>(() => {
+    try {
+      if (user?.email) {
+        const saved = localStorage.getItem(`flowtrack_projects_${user.email.toLowerCase().trim()}`);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      }
+    } catch (e) {
+      console.error(e);
     }
-  ]);
+    return [];
+  });
+
+  // Sync projects when user email changes
+  React.useEffect(() => {
+    if (!user?.email) {
+      setProjectsList([]);
+      return;
+    }
+    const key = `flowtrack_projects_${user.email.toLowerCase().trim()}`;
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setProjectsList(parsed);
+          return;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setProjectsList([]);
+  }, [user?.email]);
+
+  // Save projects per user email
+  React.useEffect(() => {
+    if (!user?.email) return;
+    const key = `flowtrack_projects_${user.email.toLowerCase().trim()}`;
+    try {
+      localStorage.setItem(key, JSON.stringify(projectsList));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [projectsList, user?.email]);
 
   // Filtering states
   const [searchQuery, setSearchQuery] = useState<string>('');

@@ -64,80 +64,77 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const activeSeconds = activeTask ? activeTask.time_spent_seconds : 8077; // 02:14:37
 
-  // Projects in flow mock data merged with real tasks info
-  const projectsInFlow = [
-    {
-      id: 'proj_1',
-      name: 'Client Website — Redesign',
-      client: 'Northline Design',
-      timeSpent: '14h 20m',
-      progress: 72,
-      status: 'On track',
+  // Calculate total logged seconds & billable seconds from real tasks
+  const totalLoggedSecs = tasks.reduce((sum, t) => sum + (t.time_spent_seconds || 0), 0);
+  const billableLoggedSecs = tasks.filter((t) => t.billable !== false).reduce((sum, t) => sum + (t.time_spent_seconds || 0), 0);
+
+  const formatHoursMins = (secs: number) => {
+    if (!secs || secs <= 0) return '0h 00m';
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    return `${h}h ${m.toString().padStart(2, '0')}m`;
+  };
+
+  // Derive projects dynamically from user tasks
+  const uniqueProjectNames = Array.from(
+    new Set(tasks.map((t) => t.project_name || t.category_id || 'General Task').filter(Boolean))
+  );
+
+  const dynamicProjects = uniqueProjectNames.map((projName, idx) => {
+    const projTasks = tasks.filter((t) => (t.project_name || t.category_id || 'General Task') === projName);
+    const projSecs = projTasks.reduce((s, t) => s + (t.time_spent_seconds || 0), 0);
+    const completedCount = projTasks.filter((t) => t.status === 'Completed').length;
+    const progress = projTasks.length > 0 ? Math.round((completedCount / projTasks.length) * 100) : 0;
+    const colors = ['bg-[#2E4CFF]', 'bg-[#1F9D6B]', 'bg-[#E8862B]', 'bg-[#8A8E97]', 'bg-[#635BFF]'];
+
+    return {
+      id: `proj_dyn_${idx}`,
+      name: projName,
+      client: user.orgName || 'Organization Workspace',
+      timeSpent: formatHoursMins(projSecs),
+      progress,
+      status: progress === 100 ? 'Completed' : 'On track',
       isRisk: false,
-      color: 'bg-[#2E4CFF]',
-      avatars: [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80'
-      ]
-    },
-    {
-      id: 'proj_2',
-      name: 'Brand Refresh',
-      client: 'Northline Design',
-      timeSpent: '6h 45m',
-      progress: 38,
-      status: 'On track',
-      isRisk: false,
-      color: 'bg-[#1F9D6B]',
-      avatars: [
-        'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80'
-      ]
-    },
-    {
-      id: 'proj_3',
-      name: 'Mobile App — Sprint 4',
-      client: 'Vela Systems',
-      timeSpent: '18h 05m',
-      progress: 94,
-      status: 'Near budget',
-      isRisk: true,
-      color: 'bg-[#E8862B]',
-      avatars: [
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80'
-      ]
-    },
-    {
-      id: 'proj_4',
-      name: 'Internal Ops',
-      client: 'Flow Track Team',
-      timeSpent: '3h 10m',
-      progress: 20,
-      status: 'On track',
-      isRisk: false,
-      color: 'bg-[#8A8E97]',
-      avatars: [
-        'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80'
-      ]
+      color: colors[idx % colors.length],
+      avatars: [user.avatar]
+    };
+  });
+
+  // Calculate daily chart bars dynamically from tasks
+  const daysOfWeek = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  const dailySecondsMap: Record<string, { total: number; billable: number }> = {
+    MON: { total: 0, billable: 0 },
+    TUE: { total: 0, billable: 0 },
+    WED: { total: 0, billable: 0 },
+    THU: { total: 0, billable: 0 },
+    FRI: { total: 0, billable: 0 },
+    SAT: { total: 0, billable: 0 },
+    SUN: { total: 0, billable: 0 },
+  };
+
+  tasks.forEach((t) => {
+    if (t.created_at || t.updated_at) {
+      const d = new Date(t.created_at || t.updated_at || Date.now());
+      const dayIdx = (d.getDay() + 6) % 7;
+      const dayKey = daysOfWeek[dayIdx];
+      if (dailySecondsMap[dayKey]) {
+        dailySecondsMap[dayKey].total += t.time_spent_seconds || 0;
+        if (t.billable !== false) {
+          dailySecondsMap[dayKey].billable += t.time_spent_seconds || 0;
+        }
+      }
     }
-  ];
+  });
 
-  // Daily Chart Bars Data (Height in px, fill height in %)
-  const dailyBars = [
-    { day: 'MON', heightPx: 105, fillPct: 80 },
-    { day: 'TUE', heightPx: 150, fillPct: 60 },
-    { day: 'WED', heightPx: 170, fillPct: 92 },
-    { day: 'THU', heightPx: 120, fillPct: 50 },
-    { day: 'FRI', heightPx: 145, fillPct: 74 },
-    { day: 'SAT', heightPx: 70, fillPct: 30 },
-    { day: 'SUN', heightPx: 45, fillPct: 14 }
-  ];
+  const maxDaySecs = Math.max(...Object.values(dailySecondsMap).map((d) => d.total), 3600);
+  const dailyBars = daysOfWeek.map((dayKey) => {
+    const { total, billable } = dailySecondsMap[dayKey];
+    const heightPx = total > 0 ? Math.min(Math.round((total / maxDaySecs) * 150) + 15, 160) : 12;
+    const fillPct = total > 0 ? Math.min(Math.round((billable / total) * 100), 100) : 0;
+    return { day: dayKey, heightPx, fillPct, hoursLogged: (total / 3600).toFixed(1) };
+  });
 
-  const firstName = user.name.split(' ')[0] || 'Sara';
+  const firstName = user.name.split(' ')[0] || 'Member';
 
   return (
     <div className="space-y-6 pb-12 text-[#15181D]">
@@ -196,12 +193,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Clock className="w-4 h-4" />
             </div>
             <span className="font-mono text-xs font-bold text-[#1F9D6B] bg-[#E6F6EF] px-2.5 py-0.5 rounded-full">
-              ↑ 12%
+              {totalLoggedSecs > 0 ? 'Live' : '0%'}
             </span>
           </div>
           <div>
             <span className="font-serif text-2xl sm:text-3xl font-normal text-[#15181D] tracking-tight block">
-              32h 40m
+              {formatHoursMins(totalLoggedSecs)}
             </span>
             <span className="text-xs text-[#8A8E97] font-medium block mt-1">
               Tracked this week
@@ -216,12 +213,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <BarChart2 className="w-4 h-4" />
             </div>
             <span className="font-mono text-xs font-bold text-[#1F9D6B] bg-[#E6F6EF] px-2.5 py-0.5 rounded-full">
-              ↑ 4%
+              {billableLoggedSecs > 0 ? 'Live' : '0%'}
             </span>
           </div>
           <div>
             <span className="font-serif text-2xl sm:text-3xl font-normal text-[#15181D] tracking-tight block">
-              27h 05m
+              {formatHoursMins(billableLoggedSecs)}
             </span>
             <span className="text-xs text-[#8A8E97] font-medium block mt-1">
               Billable hours
@@ -235,13 +232,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="w-8 h-8 rounded-lg bg-[#FBEEE1] text-[#E8862B] flex items-center justify-center">
               <FolderKanban className="w-4 h-4" />
             </div>
-            <span className="font-mono text-xs font-bold text-[#C0392B] bg-[#FBEBE9] px-2.5 py-0.5 rounded-full">
-              ↓ 2%
+            <span className="font-mono text-xs font-bold text-[#2E4CFF] bg-[#EAEEFF] px-2.5 py-0.5 rounded-full">
+              {uniqueProjectNames.length} Total
             </span>
           </div>
           <div>
             <span className="font-serif text-2xl sm:text-3xl font-normal text-[#15181D] tracking-tight block">
-              12
+              {uniqueProjectNames.length}
             </span>
             <span className="text-xs text-[#8A8E97] font-medium block mt-1">
               Active projects
@@ -249,22 +246,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Card 4: Team members in flow */}
+        {/* Card 4: Tasks count */}
         <div className="bg-white border border-[#E4E4DF] rounded-2xl p-5 shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
             <div className="w-8 h-8 rounded-lg bg-[#EAEEFF] text-[#2E4CFF] flex items-center justify-center">
               <Users className="w-4 h-4" />
             </div>
             <span className="font-mono text-xs font-bold text-[#1F9D6B] bg-[#E6F6EF] px-2.5 py-0.5 rounded-full">
-              ↑ 3
+              {tasks.length} Tasks
             </span>
           </div>
           <div>
             <span className="font-serif text-2xl sm:text-3xl font-normal text-[#15181D] tracking-tight block">
-              8
+              {tasks.length}
             </span>
             <span className="text-xs text-[#8A8E97] font-medium block mt-1">
-              Team members in flow
+              Total user tasks
             </span>
           </div>
         </div>
@@ -367,59 +364,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="space-y-1 divide-y divide-[#F0F0EC]">
-            
-            {/* Activity 1 */}
-            <div className="flex items-center gap-3 py-2.5 first:pt-0">
-              <span className="w-2 h-9 rounded-md bg-[#2E4CFF] shrink-0" />
-              <div className="flex-1 min-w-0">
-                <b className="text-xs font-semibold text-[#15181D] block truncate">Onboarding flow</b>
-                <span className="text-[11px] text-[#8A8E97] block truncate">Client Website — Redesign</span>
+            {tasks.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#8A8E97] space-y-2">
+                <Clock className="w-8 h-8 text-[#C4C4BD] mx-auto" />
+                <p className="font-medium text-[#15181D]">No activity logged yet</p>
+                <p>Start a timer or create a task to log your time!</p>
               </div>
-              <div className="text-right shrink-0">
-                <span className="font-mono text-xs font-semibold text-[#15181D] block">2:14:37</span>
-                <span className="text-[10px] text-[#1F9D6B] font-medium block">Running</span>
-              </div>
-            </div>
-
-            {/* Activity 2 */}
-            <div className="flex items-center gap-3 py-2.5">
-              <span className="w-2 h-9 rounded-md bg-[#1F9D6B] shrink-0" />
-              <div className="flex-1 min-w-0">
-                <b className="text-xs font-semibold text-[#15181D] block truncate">Discovery call</b>
-                <span className="text-[11px] text-[#8A8E97] block truncate">Northline — Brand Refresh</span>
-              </div>
-              <div className="text-right shrink-0">
-                <span className="font-mono text-xs text-[#15181D] block">1:05:12</span>
-                <span className="text-[10px] text-[#8A8E97] block">11:20 AM</span>
-              </div>
-            </div>
-
-            {/* Activity 3 */}
-            <div className="flex items-center gap-3 py-2.5">
-              <span className="w-2 h-9 rounded-md bg-[#E8862B] shrink-0" />
-              <div className="flex-1 min-w-0">
-                <b className="text-xs font-semibold text-[#15181D] block truncate">Wireframes v2</b>
-                <span className="text-[11px] text-[#8A8E97] block truncate">Client Website — Redesign</span>
-              </div>
-              <div className="text-right shrink-0">
-                <span className="font-mono text-xs text-[#15181D] block">3:40:08</span>
-                <span className="text-[10px] text-[#8A8E97] block">9:00 AM</span>
-              </div>
-            </div>
-
-            {/* Activity 4 */}
-            <div className="flex items-center gap-3 py-2.5">
-              <span className="w-2 h-9 rounded-md bg-[#8A8E97] shrink-0" />
-              <div className="flex-1 min-w-0">
-                <b className="text-xs font-semibold text-[#15181D] block truncate">Internal standup</b>
-                <span className="text-[11px] text-[#8A8E97] block truncate">Team — General</span>
-              </div>
-              <div className="text-right shrink-0">
-                <span className="font-mono text-xs text-[#15181D] block">0:15:00</span>
-                <span className="text-[10px] text-[#8A8E97] block">Yesterday</span>
-              </div>
-            </div>
-
+            ) : (
+              tasks.slice(0, 5).map((t) => (
+                <div key={t.id} className="flex items-center gap-3 py-2.5 first:pt-0">
+                  <span className={`w-2 h-9 rounded-md shrink-0 ${t.is_timer_running ? 'bg-[#1F9D6B]' : 'bg-[#2E4CFF]'}`} />
+                  <div className="flex-1 min-w-0">
+                    <b className="text-xs font-semibold text-[#15181D] block truncate">{t.title}</b>
+                    <span className="text-[11px] text-[#8A8E97] block truncate">{t.project_name || t.category_id || 'General'}</span>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="font-mono text-xs font-semibold text-[#15181D] block">
+                      {formatTimerString(t.time_spent_seconds || 0)}
+                    </span>
+                    <span className={`text-[10px] font-medium block ${t.is_timer_running ? 'text-[#1F9D6B]' : 'text-[#8A8E97]'}`}>
+                      {t.is_timer_running ? 'Running' : t.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -443,82 +412,86 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Responsive Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-[#E4E4DF] bg-[#F7F7F4]/50">
-                <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Project</th>
-                <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Time this week</th>
-                <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Budget used</th>
-                <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Status</th>
-                <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Team</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#F0F0EC]">
-              {projectsInFlow.map((proj) => (
-                <tr key={proj.id} className="hover:bg-[#F7F7F4]/40 transition-colors">
-                  
-                  {/* Project Name & Client */}
-                  <td className="py-4 px-5">
-                    <div className="flex items-center gap-3">
-                      <span className={`w-2.5 h-2.5 rounded-xs shrink-0 ${proj.color}`} />
-                      <div>
-                        <div className="text-xs font-semibold text-[#15181D]">{proj.name}</div>
-                        <div className="text-[11px] text-[#8A8E97] font-normal">{proj.client}</div>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Time This Week */}
-                  <td className="py-4 px-5 font-mono text-xs font-medium text-[#15181D]">
-                    {proj.timeSpent}
-                  </td>
-
-                  {/* Budget Progress Bar */}
-                  <td className="py-4 px-5">
-                    <div className="flex items-center gap-3 min-w-[140px]">
-                      <div className="flex-1 h-1.5 bg-[#F0F0EC] rounded-full overflow-hidden">
-                        <div
-                          style={{ width: `${proj.progress}%` }}
-                          className={`h-full rounded-full ${proj.isRisk ? 'bg-[#E8862B]' : 'bg-[#2E4CFF]'}`}
-                        />
-                      </div>
-                      <span className="font-mono text-xs text-[#4B4F58] min-w-[32px]">
-                        {proj.progress}%
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Status Pill */}
-                  <td className="py-4 px-5">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                      proj.isRisk 
-                        ? 'bg-[#FBEEE1] text-[#E8862B]' 
-                        : 'bg-[#E6F6EF] text-[#1F9D6B]'
-                    }`}>
-                      <span className="w-1.5 h-1.5 rounded-full fill-current bg-current" />
-                      <span>{proj.status}</span>
-                    </span>
-                  </td>
-
-                  {/* Team Avatars */}
-                  <td className="py-4 px-5">
-                    <div className="flex items-center -space-x-2">
-                      {proj.avatars.map((img, i) => (
-                        <img
-                          key={i}
-                          src={img}
-                          alt="Team avatar"
-                          referrerPolicy="no-referrer"
-                          className="w-6 h-6 rounded-full border-2 border-white object-cover"
-                        />
-                      ))}
-                    </div>
-                  </td>
-
+          {dynamicProjects.length === 0 ? (
+            <div className="p-12 text-center text-xs text-[#8A8E97] space-y-3">
+              <FolderKanban className="w-10 h-10 text-[#C4C4BD] mx-auto" />
+              <p className="font-semibold text-[#15181D] text-sm">No active projects yet</p>
+              <p>Your workspace is clean and ready. Click "New project" above to get started!</p>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#E4E4DF] bg-[#F7F7F4]/50">
+                  <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Project</th>
+                  <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Time logged</th>
+                  <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Completion</th>
+                  <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-5 text-[11px] font-semibold text-[#8A8E97] uppercase tracking-wider">Team</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#F0F0EC]">
+                {dynamicProjects.map((proj) => (
+                  <tr key={proj.id} className="hover:bg-[#F7F7F4]/40 transition-colors">
+                    
+                    {/* Project Name & Client */}
+                    <td className="py-4 px-5">
+                      <div className="flex items-center gap-3">
+                        <span className={`w-2.5 h-2.5 rounded-xs shrink-0 ${proj.color}`} />
+                        <div>
+                          <div className="text-xs font-semibold text-[#15181D]">{proj.name}</div>
+                          <div className="text-[11px] text-[#8A8E97] font-normal">{proj.client}</div>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Time Logged */}
+                    <td className="py-4 px-5 font-mono text-xs font-medium text-[#15181D]">
+                      {proj.timeSpent}
+                    </td>
+
+                    {/* Completion Progress Bar */}
+                    <td className="py-4 px-5">
+                      <div className="flex items-center gap-3 min-w-[140px]">
+                        <div className="flex-1 h-1.5 bg-[#F0F0EC] rounded-full overflow-hidden">
+                          <div
+                            style={{ width: `${proj.progress}%` }}
+                            className="h-full rounded-full bg-[#2E4CFF]"
+                          />
+                        </div>
+                        <span className="font-mono text-xs text-[#4B4F58] min-w-[32px]">
+                          {proj.progress}%
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Status Pill */}
+                    <td className="py-4 px-5">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#E6F6EF] text-[#1F9D6B]">
+                        <span className="w-1.5 h-1.5 rounded-full fill-current bg-current" />
+                        <span>{proj.status}</span>
+                      </span>
+                    </td>
+
+                    {/* Team Avatars */}
+                    <td className="py-4 px-5">
+                      <div className="flex items-center -space-x-2">
+                        {proj.avatars.map((img, i) => (
+                          <img
+                            key={i}
+                            src={img}
+                            alt="Team avatar"
+                            referrerPolicy="no-referrer"
+                            className="w-6 h-6 rounded-full border-2 border-white object-cover"
+                          />
+                        ))}
+                      </div>
+                    </td>
+
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
       </div>
