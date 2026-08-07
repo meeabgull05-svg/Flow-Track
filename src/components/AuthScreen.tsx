@@ -1699,31 +1699,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
                   <div className="h-[1px] bg-slate-200 flex-1" />
                 </div>
 
-                {/* Social Login Buttons */}
-                <div className="grid grid-cols-2 gap-2">
+                {/* Social Login Button */}
+                <div>
                   <button
                     type="button"
                     onClick={() => handleOpenSocialAuth('Google')}
-                    className="flex items-center justify-center gap-1.5 py-2 px-3 border border-slate-200/90 rounded-lg bg-white hover:bg-slate-50 text-[11px] font-bold text-slate-800 transition-all cursor-pointer shadow-2xs hover:border-slate-300 active:scale-[0.98]"
+                    className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 border border-slate-200/90 rounded-xl bg-white hover:bg-slate-50 text-xs font-extrabold text-slate-800 transition-all cursor-pointer shadow-2xs hover:border-slate-300 active:scale-[0.98]"
                   >
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16">
+                    <svg className="w-4 h-4" viewBox="0 0 16 16">
                       <path fill="#4285F4" d="M15.68 8.18c0-.57-.05-1.11-.14-1.64H8v3.1h4.3a3.68 3.68 0 01-1.6 2.42v2h2.58c1.5-1.39 2.4-3.44 2.4-5.88z"/>
                       <path fill="#34A853" d="M8 16c2.16 0 3.97-.72 5.29-1.94l-2.58-2c-.72.48-1.63.76-2.71.76-2.08 0-3.85-1.4-4.48-3.29H.86v2.07A8 8 0 008 16z"/>
                       <path fill="#FBBC05" d="M3.52 9.53a4.8 4.8 0 010-3.06V4.4H.86a8 8 0 000 7.2l2.66-2.07z"/>
                       <path fill="#EA4335" d="M8 3.18c1.17 0 2.23.4 3.06 1.2l2.29-2.29C11.96.9 10.16.13 8 .13a8 8 0 00-7.14 4.27l2.66 2.07C4.15 4.58 5.92 3.18 8 3.18z"/>
                     </svg>
-                    <span>Google</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleOpenSocialAuth('Facebook')}
-                    className="flex items-center justify-center gap-1.5 py-2 px-3 border border-slate-200/90 rounded-lg bg-white hover:bg-slate-50 text-[11px] font-bold text-slate-800 transition-all cursor-pointer shadow-2xs hover:border-slate-300 active:scale-[0.98]"
-                  >
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16">
-                      <path fill="#1877F2" d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
-                    </svg>
-                    <span>Facebook</span>
+                    <span>Continue with Google</span>
                   </button>
                 </div>
 
