@@ -55,36 +55,37 @@ export const TrackerView: React.FC<TrackerViewProps> = ({
   const [selectedTaskFilter, setSelectedTaskFilter] = useState<string>('All');
   const [activeTab, setActiveTab] = useState<'Notes' | 'Breaks' | 'Screenshots'>('Notes');
   
-  // Note input state
+  // Note input state - initialized empty or per-user saved notes
   const [noteInput, setNoteInput] = useState<string>('');
-  const [notesList, setNotesList] = useState<NoteItem[]>([
-    {
-      id: 'note_1',
-      text: 'Working on the new dashboard UI. Designing charts and stats section.',
-      timestamp: '10:30 AM'
-    },
-    {
-      id: 'note_2',
-      text: 'Completed primary wireframes for mobile responsiveness and sidebar tabs.',
-      timestamp: '08:45 AM'
+  const [notesList, setNotesList] = useState<NoteItem[]>(() => {
+    try {
+      if (user?.email) {
+        const saved = localStorage.getItem(`flowtrack_notes_${user.email.toLowerCase().trim()}`);
+        if (saved) return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error(e);
     }
-  ]);
+    return [];
+  });
+
+  // Save notes per user email
+  React.useEffect(() => {
+    if (!user?.email) return;
+    try {
+      localStorage.setItem(`flowtrack_notes_${user.email.toLowerCase().trim()}`, JSON.stringify(notesList));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [notesList, user?.email]);
 
   // Break tracker state
   const [isOnBreak, setIsOnBreak] = useState<boolean>(false);
   const [breakSeconds, setBreakSeconds] = useState<number>(0);
 
   // Active or top task for current timer display
-  const currentTask = tasks.find(t => t.id === activeTimerTaskId) || tasks[0] || {
-    id: 'default_task',
-    title: 'UI Design',
-    category: 'FlowTrack Website Redesign',
-    tags: ['FlowTrack Project', 'Design'],
-    time_spent_seconds: 8325, // 02:18:45
-    status: 'In Progress'
-  };
-
-  const isRunning = activeTimerTaskId === currentTask.id;
+  const currentTask = tasks.find(t => t.id === activeTimerTaskId) || tasks[0] || null;
+  const isRunning = currentTask ? activeTimerTaskId === currentTask.id : false;
 
   // Time conversion
   const formatTimerDigits = (secs: number) => {
@@ -99,7 +100,7 @@ export const TrackerView: React.FC<TrackerViewProps> = ({
     };
   };
 
-  const timerDigits = formatTimerDigits(currentTask ? currentTask.time_spent_seconds : 0);
+  const timerDigits = formatTimerDigits(currentTask ? currentTask.time_spent_seconds || 0 : 0);
 
   const handleAddNote = () => {
     if (!noteInput.trim()) return;
@@ -112,67 +113,40 @@ export const TrackerView: React.FC<TrackerViewProps> = ({
     setNoteInput('');
   };
 
-  // Projects data mock
-  const projectsData = [
-    { name: 'FlowTrack Website', time: '32h 45m', color: 'bg-[#635BFF]', percent: 75 },
-    { name: 'WeVersity Platform', time: '18h 20m', color: 'bg-emerald-500', percent: 55 },
-    { name: 'Client Dashboard', time: '12h 10m', color: 'bg-amber-500', percent: 38 },
-    { name: 'Mobile App Design', time: '8h 30m', color: 'bg-blue-500', percent: 25 },
-  ];
+  // Derive unique projects dynamically from user tasks
+  const uniqueProjectNames = Array.from(new Set(tasks.map(t => t.project_name || t.category_id || 'General Task').filter(Boolean)));
 
-  // Time entries list for table
-  const timeEntries = [
-    {
-      id: tasks[0]?.id || '1',
-      title: tasks[0]?.title || 'UI Design',
-      project: 'FlowTrack Website',
-      tags: ['Design'],
-      tagColor: 'bg-purple-100 text-purple-700',
-      duration: formatDuration(tasks[0]?.time_spent_seconds || 8325), // 02:18:45
-      timeRange: '9:00 AM – 11:18 AM',
-      isRunning: activeTimerTaskId === tasks[0]?.id,
-    },
-    {
-      id: tasks[1]?.id || '2',
-      title: tasks[1]?.title || 'Wireframing',
-      project: 'FlowTrack Website',
-      tags: ['Design'],
-      tagColor: 'bg-purple-100 text-purple-700',
-      duration: '01:45:20',
-      timeRange: '7:00 AM – 8:45 AM',
-      isRunning: activeTimerTaskId === tasks[1]?.id,
-    },
-    {
-      id: tasks[2]?.id || '3',
-      title: tasks[2]?.title || 'Team Meeting',
-      project: 'Internal',
-      tags: ['Meeting'],
-      tagColor: 'bg-amber-100 text-amber-700',
-      duration: '00:45:00',
-      timeRange: '5:45 AM – 6:30 AM',
-      isRunning: activeTimerTaskId === tasks[2]?.id,
-    },
-    {
-      id: tasks[3]?.id || '4',
-      title: tasks[3]?.title || 'Research',
-      project: 'FlowTrack Website',
-      tags: ['Research'],
-      tagColor: 'bg-blue-100 text-blue-700',
-      duration: '01:10:15',
-      timeRange: '4:30 AM – 5:40 AM',
-      isRunning: activeTimerTaskId === tasks[3]?.id,
-    },
-    {
-      id: tasks[4]?.id || '5',
-      title: tasks[4]?.title || 'Home Page Design',
-      project: 'FlowTrack Website',
-      tags: ['Design'],
-      tagColor: 'bg-purple-100 text-purple-700',
-      duration: '01:20:30',
-      timeRange: '2:30 AM – 3:50 AM',
-      isRunning: activeTimerTaskId === tasks[4]?.id,
-    },
-  ];
+  const projectsData = uniqueProjectNames.map((pName, idx) => {
+    const projTasks = tasks.filter(t => (t.project_name || t.category_id || 'General Task') === pName);
+    const secs = projTasks.reduce((acc, t) => acc + (t.time_spent_seconds || 0), 0);
+    const colors = ['bg-[#635BFF]', 'bg-emerald-500', 'bg-amber-500', 'bg-blue-500', 'bg-purple-600'];
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const totalSecsAll = tasks.reduce((acc, t) => acc + (t.time_spent_seconds || 0), 0) || 1;
+    const percent = Math.min(100, Math.round((secs / totalSecsAll) * 100));
+    return {
+      name: pName,
+      time: `${h}h ${m.toString().padStart(2, '0')}m`,
+      color: colors[idx % colors.length],
+      percent: percent || 10
+    };
+  });
+
+  // Calculate total logged time across all user tasks
+  const totalLoggedSecs = tasks.reduce((sum, t) => sum + (t.time_spent_seconds || 0), 0);
+  const totalLoggedTimeFormatted = formatDuration(totalLoggedSecs);
+
+  // Time entries list for table mapped directly from real user tasks
+  const timeEntries = tasks.map((t) => ({
+    id: t.id,
+    title: t.title,
+    project: t.project_name || t.category_id || 'General Task',
+    tags: t.tags || ['Task'],
+    tagColor: t.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-purple-100 text-purple-700',
+    duration: formatDuration(t.time_spent_seconds || 0),
+    timeRange: t.updated_at ? new Date(t.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Today',
+    isRunning: activeTimerTaskId === t.id,
+  }));
 
   return (
     <div className="space-y-6 pb-12">
@@ -217,21 +191,23 @@ export const TrackerView: React.FC<TrackerViewProps> = ({
               <span className="text-xs font-medium text-slate-300">•</span>
               <div className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
                 <Folder className="w-3.5 h-3.5 text-[#635BFF]" />
-                <span>{currentTask.category || 'UI/UX Design'}</span>
+                <span>{currentTask ? (currentTask.category || 'General Task') : 'Workspace'}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-3 pt-1">
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                {currentTask.title}
+                {currentTask ? currentTask.title : 'No Task Created Yet'}
               </h2>
-              <button 
-                onClick={() => onOpenEditTask(currentTask as Task)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-[#635BFF] hover:bg-purple-50 transition-all cursor-pointer"
-                title="Edit task title"
-              >
-                <Edit3 className="w-4 h-4" />
-              </button>
+              {currentTask && (
+                <button 
+                  onClick={() => onOpenEditTask(currentTask)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-[#635BFF] hover:bg-purple-50 transition-all cursor-pointer"
+                  title="Edit task title"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -355,7 +331,7 @@ export const TrackerView: React.FC<TrackerViewProps> = ({
             {/* Main Action Buttons */}
             <div className="space-y-3 my-auto">
               <button
-                onClick={() => onToggleTimer(currentTask.id)}
+                onClick={() => currentTask ? onToggleTimer(currentTask.id) : onOpenAddTask()}
                 className={`w-full py-4 px-6 rounded-2xl text-base font-extrabold shadow-md transition-all flex items-center justify-center gap-3 cursor-pointer ${
                   isRunning
                     ? 'bg-[#635BFF] hover:bg-[#5249ea] text-white shadow-[#635BFF]/30 active:scale-[0.99]'
@@ -377,7 +353,7 @@ export const TrackerView: React.FC<TrackerViewProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => onToggleComplete(currentTask.id)}
+                  onClick={() => currentTask && onToggleComplete(currentTask.id)}
                   className="py-3.5 px-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
                 >
                   <Square className="w-4 h-4 fill-slate-700 text-slate-700" />
@@ -477,69 +453,77 @@ export const TrackerView: React.FC<TrackerViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {timeEntries.map((entry) => (
-                <tr key={entry.id} className="hover:bg-slate-50/80 transition-colors">
-                  {/* Task Title with Play icon */}
-                  <td className="py-3.5 font-bold text-slate-900 flex items-center gap-2.5">
-                    <button
-                      onClick={() => onToggleTimer(entry.id)}
-                      className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                        entry.isRunning
-                          ? 'bg-[#635BFF] text-white shadow-sm'
-                          : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                      }`}
-                    >
-                      {entry.isRunning ? (
-                        <Pause className="w-3 h-3 fill-current" />
-                      ) : (
-                        <Play className="w-3 h-3 fill-current ml-0.5" />
-                      )}
-                    </button>
-                    <span className={entry.isRunning ? 'text-[#635BFF]' : 'text-slate-900'}>
-                      {entry.title}
-                    </span>
-                  </td>
-
-                  {/* Project */}
-                  <td className="py-3.5 text-slate-600 font-medium">{entry.project}</td>
-
-                  {/* Tags */}
-                  <td className="py-3.5">
-                    <div className="flex gap-1">
-                      {entry.tags.map((tag, i) => (
-                        <span
-                          key={i}
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${entry.tagColor}`}
-                        >
-                          ● {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-
-                  {/* Duration */}
-                  <td className="py-3.5 font-mono font-bold text-slate-900">
-                    {entry.duration}
-                  </td>
-
-                  {/* Time Range */}
-                  <td className="py-3.5 text-slate-500 font-medium">
-                    {entry.timeRange}
-                  </td>
-
-                  {/* Actions */}
-                  <td className="py-3.5 text-right">
-                    <button className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
+              {timeEntries.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">
+                    No time entries logged yet. Create a task or start a timer to begin tracking!
                   </td>
                 </tr>
-              ))}
+              ) : (
+                timeEntries.map((entry) => (
+                  <tr key={entry.id} className="hover:bg-slate-50/80 transition-colors">
+                    {/* Task Title with Play icon */}
+                    <td className="py-3.5 font-bold text-slate-900 flex items-center gap-2.5">
+                      <button
+                        onClick={() => onToggleTimer(entry.id)}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                          entry.isRunning
+                            ? 'bg-[#635BFF] text-white shadow-sm'
+                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                        }`}
+                      >
+                        {entry.isRunning ? (
+                          <Pause className="w-3 h-3 fill-current" />
+                        ) : (
+                          <Play className="w-3 h-3 fill-current ml-0.5" />
+                        )}
+                      </button>
+                      <span className={entry.isRunning ? 'text-[#635BFF]' : 'text-slate-900'}>
+                        {entry.title}
+                      </span>
+                    </td>
+
+                    {/* Project */}
+                    <td className="py-3.5 text-slate-600 font-medium">{entry.project}</td>
+
+                    {/* Tags */}
+                    <td className="py-3.5">
+                      <div className="flex gap-1">
+                        {entry.tags.map((tag, i) => (
+                          <span
+                            key={i}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${entry.tagColor}`}
+                          >
+                            ● {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+
+                    {/* Duration */}
+                    <td className="py-3.5 font-mono font-bold text-slate-900">
+                      {entry.duration}
+                    </td>
+
+                    {/* Time Range */}
+                    <td className="py-3.5 text-slate-500 font-medium">
+                      {entry.timeRange}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-3.5 text-right">
+                      <button className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
             <tfoot>
               <tr className="border-t border-slate-200 text-xs font-bold">
                 <td colSpan={3} className="pt-3 text-slate-700">Total Logged Time</td>
-                <td className="pt-3 font-mono text-[#635BFF] font-black text-sm">07:19:50</td>
+                <td className="pt-3 font-mono text-[#635BFF] font-black text-sm">{totalLoggedTimeFormatted}</td>
                 <td colSpan={2} />
               </tr>
             </tfoot>
@@ -646,23 +630,29 @@ export const TrackerView: React.FC<TrackerViewProps> = ({
             </div>
 
             <div className="space-y-3">
-              {projectsData.map((p, idx) => (
-                <div key={idx} className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-2xs transition-all">
-                  <div className="flex items-center justify-between text-xs font-bold mb-2">
-                    <span className="text-slate-900">{p.name}</span>
-                    <span className="font-mono text-slate-700">{p.time}</span>
-                  </div>
-                  <div className="w-full bg-slate-200/70 rounded-full h-1.5 overflow-hidden">
-                    <div className={`${p.color} h-1.5 rounded-full`} style={{ width: `${p.percent}%` }} />
-                  </div>
+              {projectsData.length === 0 ? (
+                <div className="p-4 text-center text-slate-400 text-xs font-medium">
+                  No active projects yet
                 </div>
-              ))}
+              ) : (
+                projectsData.map((p, idx) => (
+                  <div key={idx} className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-2xs transition-all">
+                    <div className="flex items-center justify-between text-xs font-bold mb-2">
+                      <span className="text-slate-900">{p.name}</span>
+                      <span className="font-mono text-slate-700">{p.time}</span>
+                    </div>
+                    <div className="w-full bg-slate-200/70 rounded-full h-1.5 overflow-hidden">
+                      <div className={`${p.color} h-1.5 rounded-full`} style={{ width: `${p.percent}%` }} />
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-100/80 flex items-center justify-between">
-            <span className="text-xs font-bold text-indigo-950">4 Active Projects</span>
-            <span className="text-[11px] font-bold text-[#635BFF] font-mono">71h 45m Total</span>
+            <span className="text-xs font-bold text-indigo-950">{projectsData.length} Active Projects</span>
+            <span className="text-[11px] font-bold text-[#635BFF] font-mono">{totalLoggedTimeFormatted} Total</span>
           </div>
         </div>
 

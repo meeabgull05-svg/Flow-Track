@@ -123,9 +123,37 @@ export default function App() {
       const res = await fetch('/api/admin/users');
       const json = await res.json();
       if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-        const mappedMembers: TeamMember[] = json.data.map((u: any, idx: number) => {
-          const name = u.fullName || u.email.split('@')[0];
-          const email = u.email;
+        const userOrgName = (user.orgName || organization.name)?.toLowerCase().trim();
+        const userOrgCode = organization.code?.toLowerCase().trim();
+        const currentUserEmail = user.email?.toLowerCase().trim();
+
+        // Filter users belonging to the current user's workspace/organization or email
+        const filteredUsers = json.data.filter((u: any) => {
+          const uEmail = u.email?.toLowerCase().trim();
+          const uOrgName = u.orgName?.toLowerCase().trim();
+          const uOrgCode = u.orgCode?.toLowerCase().trim();
+
+          if (currentUserEmail && uEmail === currentUserEmail) return true;
+          if (userOrgName && uOrgName && uOrgName === userOrgName) return true;
+          if (userOrgCode && uOrgCode && uOrgCode === userOrgCode) return true;
+
+          return false;
+        });
+
+        // If no users match yet, fallback to current logged-in user
+        const targetUsers = filteredUsers.length > 0 ? filteredUsers : [{
+          _id: user.id || 'usr_current',
+          fullName: user.name,
+          email: user.email,
+          photoURL: user.avatar,
+          accountType: user.role === 'Admin' ? 'OrgAdmin' : 'TeamMember',
+          orgName: user.orgName || organization.name,
+          orgCode: organization.code
+        }];
+
+        const mappedMembers: TeamMember[] = targetUsers.map((u: any, idx: number) => {
+          const name = u.fullName || (u.email ? u.email.split('@')[0] : 'Member');
+          const email = u.email || '';
           const avatar = u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=3C83F6`;
           return {
             id: u._id || `usr_mongo_${idx}`,
@@ -134,16 +162,17 @@ export default function App() {
             avatar,
             role: u.accountType === 'OrgAdmin' ? 'Organization Admin' : u.accountType || 'Team Member',
             department: u.orgType || u.orgName || 'Engineering',
-            activeStatus: idx % 2 === 0 ? 'Tracking' : 'Idle',
+            activeStatus: idx === 0 ? 'Tracking' : 'Idle',
             currentTaskTitle: `Active in ${u.orgName || 'Workspace'}`,
-            todayLoggedSeconds: 14400,
-            weeklyLoggedSeconds: 100000,
-            completedTasksCount: 5,
-            assignedTasksCount: 2,
+            todayLoggedSeconds: 0,
+            weeklyLoggedSeconds: 0,
+            completedTasksCount: 0,
+            assignedTasksCount: 0,
             joinedDate: u.lastLoginAt ? new Date(u.lastLoginAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-            orgRole: u.accountType === 'OrgAdmin' ? 'Admin' : 'Member',
+            orgRole: u.accountType === 'OrgAdmin' || (currentUserEmail && email.toLowerCase() === currentUserEmail) ? 'Admin' : 'Member',
           };
         });
+
         setTeamMembers(mappedMembers);
         setOrganization((prev) => ({
           ...prev,
@@ -153,7 +182,7 @@ export default function App() {
     } catch (err) {
       console.error('Error fetching real-time users from MongoDB:', err);
     }
-  }, []);
+  }, [user.email, user.name, user.avatar, user.role, user.orgName, user.id, organization.name, organization.code]);
 
   useEffect(() => {
     fetchRealTimeUsers();
