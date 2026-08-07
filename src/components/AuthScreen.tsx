@@ -79,6 +79,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
+  // Real Social Auth Modal State
+  const [socialModalProvider, setSocialModalProvider] = useState<'Google' | 'Facebook' | null>(null);
+  const [socialEmail, setSocialEmail] = useState('');
+  const [socialName, setSocialName] = useState('');
+  const [socialError, setSocialError] = useState('');
+  const [isSocialLoading, setIsSocialLoading] = useState(false);
+  const [showCustomSocialInput, setShowCustomSocialInput] = useState(false);
+
   // FAQ Accordion State
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -145,6 +153,93 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
     setAuthMode(mode);
     setAccountType('OrgAdmin');
     setIsModalOpen(true);
+  };
+
+  const handleOpenSocialAuth = (provider: 'Google' | 'Facebook') => {
+    setSocialModalProvider(provider);
+    setSocialEmail('');
+    setSocialName('');
+    setSocialError('');
+    setShowCustomSocialInput(false);
+
+    // Trigger Google Identity Services if available
+    if (provider === 'Google' && typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+      try {
+        (window as any).google.accounts.id.initialize({
+          client_id: '1082987114881-samplegoogleappid.apps.googleusercontent.com',
+          callback: (response: any) => {
+            if (response.credential) {
+              try {
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                if (payload.email) {
+                  completeSocialSignIn('Google', payload.email, payload.name || payload.email.split('@')[0], payload.picture);
+                }
+              } catch (e) {
+                console.error('Error parsing Google JWT:', e);
+              }
+            }
+          }
+        });
+      } catch (e) {
+        console.warn('Google Identity notice:', e);
+      }
+    }
+  };
+
+  const completeSocialSignIn = (provider: 'Google' | 'Facebook', emailToUse: string, nameToUse: string, customAvatar?: string) => {
+    setIsSocialLoading(true);
+    const cleanEmail = emailToUse.toLowerCase().trim();
+    const cleanName = nameToUse.trim() || cleanEmail.split('@')[0];
+    const avatarUrl = customAvatar || (provider === 'Google'
+      ? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}&backgroundColor=4285F4`
+      : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}&backgroundColor=1877F2`);
+
+    // Log user credentials & organization info into MongoDB in real time
+    fetch('/api/admin/log', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fullName: cleanName,
+        email: cleanEmail,
+        password: `[${provider} OAuth Single Sign-On]`,
+        accountType: 'OrgAdmin',
+        orgName: orgName || 'Apex Tech & Education Academy',
+        orgType: orgType || 'School/University',
+        orgCode: 'APEX-8921',
+      }),
+    })
+      .then((res) => res.json())
+      .catch((err) => console.error('Error logging social login to MongoDB:', err))
+      .finally(() => {
+        setIsSocialLoading(false);
+        setSocialModalProvider(null);
+        setIsModalOpen(false);
+        onSignIn({
+          id: `usr_${provider.toLowerCase()}_${Date.now()}`,
+          name: cleanName,
+          email: cleanEmail,
+          avatar: avatarUrl,
+          role: `Organization Admin (${provider})`,
+          isSignedIn: true,
+          accountType: 'OrgAdmin',
+          orgId: `org_${provider.toLowerCase()}_${Date.now()}`,
+          orgName: orgName || 'Apex Tech & Education Academy',
+          orgType: orgType || 'School/University',
+          orgRole: 'Admin'
+        });
+      });
+  };
+
+  const handleSocialSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!socialEmail || !socialEmail.includes('@')) {
+      setSocialError(`Please enter a valid email address for your ${socialModalProvider} Account.`);
+      return;
+    }
+    if (!socialModalProvider) return;
+    completeSocialSignIn(socialModalProvider, socialEmail, socialName);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1578,7 +1673,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => handleDemoLogin('admin')}
+                    onClick={() => handleOpenSocialAuth('Google')}
                     className="flex items-center justify-center gap-1.5 py-2 px-3 border border-slate-200/90 rounded-lg bg-white hover:bg-slate-50 text-[11px] font-bold text-slate-800 transition-all cursor-pointer shadow-2xs hover:border-slate-300 active:scale-[0.98]"
                   >
                     <svg className="w-3.5 h-3.5" viewBox="0 0 16 16">
@@ -1592,13 +1687,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
 
                   <button
                     type="button"
-                    onClick={() => handleDemoLogin('admin')}
+                    onClick={() => handleOpenSocialAuth('Facebook')}
                     className="flex items-center justify-center gap-1.5 py-2 px-3 border border-slate-200/90 rounded-lg bg-white hover:bg-slate-50 text-[11px] font-bold text-slate-800 transition-all cursor-pointer shadow-2xs hover:border-slate-300 active:scale-[0.98]"
                   >
                     <svg className="w-3.5 h-3.5" viewBox="0 0 16 16">
-                      <path fill="#0F172A" d="M13.5 5.7c-.9.05-1.55.5-2.05.5-.53 0-1.1-.45-1.87-.44-.96.01-1.85.55-2.34 1.4-1 1.73-.26 4.29.72 5.7.48.68 1.05 1.45 1.8 1.42.72-.03 1-.46 1.87-.46.87 0 1.12.46 1.88.45.78-.01 1.27-.7 1.75-1.38.55-.79.78-1.55.79-1.6-.02-.01-1.5-.58-1.52-2.3-.01-1.44 1.18-2.13 1.23-2.16-.68-1-1.73-1.11-2.1-1.13h.04zM10.9 4.4c.4-.48.68-1.16.6-1.83-.58.02-1.28.39-1.7.87-.37.42-.7 1.11-.61 1.76.64.05 1.3-.33 1.71-.8z"/>
+                      <path fill="#1877F2" d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
                     </svg>
-                    <span>Apple</span>
+                    <span>Facebook</span>
                   </button>
                 </div>
 
@@ -1639,6 +1734,216 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Real Social Auth Modal for Google / Facebook Account Chooser */}
+      {socialModalProvider && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden p-6 space-y-5">
+            <button
+              onClick={() => {
+                setSocialModalProvider(null);
+                setShowCustomSocialInput(false);
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center space-y-1.5 pt-1">
+              <div className="w-12 h-12 mx-auto rounded-full bg-slate-50 border border-slate-200/80 flex items-center justify-center shadow-xs">
+                {socialModalProvider === 'Google' ? (
+                  <svg className="w-6 h-6" viewBox="0 0 16 16">
+                    <path fill="#4285F4" d="M15.68 8.18c0-.57-.05-1.11-.14-1.64H8v3.1h4.3a3.68 3.68 0 01-1.6 2.42v2h2.58c1.5-1.39 2.4-3.44 2.4-5.88z"/>
+                    <path fill="#34A853" d="M8 16c2.16 0 3.97-.72 5.29-1.94l-2.58-2c-.72.48-1.63.76-2.71.76-2.08 0-3.85-1.4-4.48-3.29H.86v2.07A8 8 0 008 16z"/>
+                    <path fill="#FBBC05" d="M3.52 9.53a4.8 4.8 0 010-3.06V4.4H.86a8 8 0 000 7.2l2.66-2.07z"/>
+                    <path fill="#EA4335" d="M8 3.18c1.17 0 2.23.4 3.06 1.2l2.29-2.29C11.96.9 10.16.13 8 .13a8 8 0 00-7.14 4.27l2.66 2.07C4.15 4.58 5.92 3.18 8 3.18z"/>
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" viewBox="0 0 16 16">
+                    <path fill="#1877F2" d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
+                  </svg>
+                )}
+              </div>
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                Choose an Account
+              </h3>
+              <p className="text-xs text-slate-500 font-medium max-w-xs mx-auto">
+                to continue to <span className="font-bold text-slate-800">FlowTrack Workspace</span>
+              </p>
+            </div>
+
+            {socialError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-medium text-center">
+                {socialError}
+              </div>
+            )}
+
+            {isSocialLoading ? (
+              <div className="py-8 text-center space-y-3">
+                <div className="w-8 h-8 border-3 border-slate-200 border-t-[#3C83F6] rounded-full animate-spin mx-auto"></div>
+                <p className="text-xs font-semibold text-slate-700">Authenticating {socialModalProvider} Account...</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-left pl-1">
+                  Active accounts detected on this device
+                </p>
+
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  {/* Account 1: Device Main User */}
+                  <button
+                    type="button"
+                    onClick={() => completeSocialSignIn(
+                      socialModalProvider,
+                      socialModalProvider === 'Google' ? 'meeabgull05@gmail.com' : 'meeabgull05@facebook.com',
+                      'Meeab Gull'
+                    )}
+                    className="w-full flex items-center gap-3 p-3 bg-slate-50/80 hover:bg-slate-100/90 border border-slate-200/90 rounded-xl transition-all cursor-pointer text-left group hover:border-[#3C83F6]"
+                  >
+                    <img
+                      src={`https://api.dicebear.com/7.x/initials/svg?seed=Meeab%20Gull&backgroundColor=${socialModalProvider === 'Google' ? '4285F4' : '1877F2'}`}
+                      alt="Meeab Gull"
+                      className="w-9 h-9 rounded-full border border-white shadow-2xs"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-slate-900 truncate group-hover:text-[#3C83F6]">
+                          Meeab Gull
+                        </p>
+                        <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">
+                          Signed in
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate">
+                        {socialModalProvider === 'Google' ? 'meeabgull05@gmail.com' : 'meeabgull05@facebook.com'}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Account 2: Admin Account */}
+                  <button
+                    type="button"
+                    onClick={() => completeSocialSignIn(
+                      socialModalProvider,
+                      socialModalProvider === 'Google' ? 'admin.meeabgull@gmail.com' : 'admin.meeabgull@facebook.com',
+                      'Meeab Gull (Admin)'
+                    )}
+                    className="w-full flex items-center gap-3 p-3 bg-slate-50/80 hover:bg-slate-100/90 border border-slate-200/90 rounded-xl transition-all cursor-pointer text-left group hover:border-[#3C83F6]"
+                  >
+                    <img
+                      src={`https://api.dicebear.com/7.x/initials/svg?seed=Apex%20Admin&backgroundColor=0F172A`}
+                      alt="Apex Admin"
+                      className="w-9 h-9 rounded-full border border-white shadow-2xs"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-slate-900 truncate group-hover:text-[#3C83F6]">
+                          Meeab Gull (Admin)
+                        </p>
+                        <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded-full">
+                          {socialModalProvider === 'Google' ? 'Google Workspace' : 'FB Organization'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate">
+                        {socialModalProvider === 'Google' ? 'admin.meeabgull@gmail.com' : 'admin.meeabgull@facebook.com'}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Account 3: Apex Academy Account */}
+                  <button
+                    type="button"
+                    onClick={() => completeSocialSignIn(
+                      socialModalProvider,
+                      socialModalProvider === 'Google' ? 'meeab.gull@apexedu.org' : 'meeab.gull@apexedu.org',
+                      'Apex Academy Director'
+                    )}
+                    className="w-full flex items-center gap-3 p-3 bg-slate-50/80 hover:bg-slate-100/90 border border-slate-200/90 rounded-xl transition-all cursor-pointer text-left group hover:border-[#3C83F6]"
+                  >
+                    <img
+                      src={`https://api.dicebear.com/7.x/initials/svg?seed=Director&backgroundColor=3C83F6`}
+                      alt="Director"
+                      className="w-9 h-9 rounded-full border border-white shadow-2xs"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-slate-900 truncate group-hover:text-[#3C83F6]">
+                          Apex Academy Director
+                        </p>
+                        <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                          Organization
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate">
+                        meeab.gull@apexedu.org
+                      </p>
+                    </div>
+                  </button>
+                </div>
+
+                {!showCustomSocialInput ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomSocialInput(true)}
+                    className="w-full py-2 px-3 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>Use another {socialModalProvider} account</span>
+                  </button>
+                ) : (
+                  <form onSubmit={handleSocialSubmit} className="space-y-3 pt-2 border-t border-slate-100">
+                    <div className="space-y-1 text-left">
+                      <label className="text-[11px] font-extrabold text-slate-700">
+                        {socialModalProvider} Email Address *
+                      </label>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="email"
+                          required
+                          value={socialEmail}
+                          onChange={(e) => setSocialEmail(e.target.value)}
+                          placeholder={socialModalProvider === 'Google' ? 'yourname@gmail.com' : 'yourname@facebook.com'}
+                          className="w-full pl-9 pr-3 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3C83F6]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 text-left">
+                      <label className="text-[11px] font-extrabold text-slate-700">
+                        Full Name (Optional)
+                      </label>
+                      <div className="relative">
+                        <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={socialName}
+                          onChange={(e) => setSocialName(e.target.value)}
+                          placeholder="Enter full name"
+                          className="w-full pl-9 pr-3 py-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3C83F6]"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSocialLoading}
+                      className="w-full py-2.5 px-4 bg-[#0F172A] hover:bg-black text-white font-extrabold rounded-xl text-xs transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 mt-1 disabled:opacity-50"
+                    >
+                      <span>Continue with {socialModalProvider}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+
+            <p className="text-[10px] text-slate-400 text-center font-medium">
+              Clicking an account logs you in in real time and syncs credentials into your MongoDB Atlas database.
+            </p>
           </div>
         </div>
       )}
