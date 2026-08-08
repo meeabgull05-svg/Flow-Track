@@ -89,26 +89,69 @@ export const AdminPanel: React.FC = () => {
     setIsAuthenticated(false);
   };
 
-  const handleSendRecoveryCode = () => {
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
+
+  const handleSendRecoveryCode = async () => {
     const cleanEmail = forgotEmail.toLowerCase().trim();
     if (cleanEmail !== 'meeabgull05@gmail.com') {
       setForgotError('No admin account found with this email. Please enter meeabgull05@gmail.com');
       return;
     }
-    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setOtpCode(generatedCode);
+
+    setIsOtpLoading(true);
     setForgotError('');
-    setForgotSuccess('Security verification code generated successfully!');
-    setForgotStep('otp');
+    setForgotSuccess('');
+
+    try {
+      const res = await fetch('/api/admin/request-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setForgotSuccess(json.message || 'Verification OTP sent to your mail (meeabgull05@gmail.com)!');
+        setForgotStep('otp');
+      } else {
+        setForgotError(json.message || 'Failed to send recovery OTP code.');
+      }
+    } catch (err) {
+      setForgotError('Error connecting to backend server. Please try again.');
+    } finally {
+      setIsOtpLoading(false);
+    }
   };
 
-  const handleVerifyOtp = () => {
-    if (enteredOtp.trim() === otpCode) {
-      setForgotError('');
-      setForgotSuccess('');
-      setForgotStep('reset');
-    } else {
-      setForgotError('Invalid verification code. Please check and try again.');
+  const handleVerifyOtp = async () => {
+    if (!enteredOtp || enteredOtp.trim().length < 4) {
+      setForgotError('Please enter the 6-digit OTP code sent to your email.');
+      return;
+    }
+
+    setIsOtpLoading(true);
+    setForgotError('');
+    setForgotSuccess('');
+
+    try {
+      const res = await fetch('/api/admin/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail, otp: enteredOtp.trim() }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setForgotError('');
+        setForgotSuccess('OTP verified successfully!');
+        setForgotStep('reset');
+      } else {
+        setForgotError(json.message || 'Invalid or expired OTP code. Please check your email.');
+      }
+    } catch (err) {
+      setForgotError('Error verifying OTP code. Please try again.');
+    } finally {
+      setIsOtpLoading(false);
     }
   };
 
@@ -125,6 +168,12 @@ export const AdminPanel: React.FC = () => {
     localStorage.setItem('flowtrack_admin_pwd', newPassword);
     setForgotError('');
     setForgotSuccess('Admin password updated successfully!');
+    setForgotStep('success');
+  };
+
+  const handleSkipReset = () => {
+    setForgotError('');
+    setForgotSuccess('Password reset skipped.');
     setForgotStep('success');
   };
 
@@ -424,9 +473,10 @@ export const AdminPanel: React.FC = () => {
 
                   <button
                     onClick={handleSendRecoveryCode}
-                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer"
+                    disabled={isOtpLoading}
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    Send Security Code
+                    <span>{isOtpLoading ? 'Sending Security Code...' : 'Send Security Code to Mail'}</span>
                   </button>
                 </div>
               )}
@@ -434,35 +484,41 @@ export const AdminPanel: React.FC = () => {
               {/* STEP 2: OTP Entry */}
               {forgotStep === 'otp' && (
                 <div className="space-y-4">
-                  <p className="text-xs text-slate-400">
-                    A 6-digit security verification code has been generated for <strong className="text-slate-200">{forgotEmail}</strong>.
+                  <p className="text-xs text-slate-300 leading-relaxed bg-blue-950/30 border border-blue-500/20 p-3 rounded-xl">
+                    A 6-digit security verification code has been generated and sent to your email (<strong className="text-blue-400 font-mono">{forgotEmail}</strong>). Please check your mail inbox and enter the 6-digit code below.
                   </p>
-
-                  <div className="p-3 bg-blue-950/40 border border-blue-500/30 rounded-xl text-center">
-                    <span className="text-[10px] uppercase font-bold text-blue-400 block mb-0.5">Demo Security OTP</span>
-                    <span className="text-xl font-mono font-black text-white tracking-widest">{otpCode}</span>
-                  </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                      Enter 6-Digit Code
+                      Enter 6-Digit Email OTP
                     </label>
                     <input
                       type="text"
                       maxLength={6}
                       value={enteredOtp}
                       onChange={(e) => setEnteredOtp(e.target.value)}
-                      placeholder="892105"
+                      placeholder="Enter code from email"
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-center font-mono font-bold text-white tracking-widest focus:outline-none focus:border-blue-500"
                     />
                   </div>
 
-                  <button
-                    onClick={handleVerifyOtp}
-                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer"
-                  >
-                    Verify Code
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleVerifyOtp}
+                      disabled={isOtpLoading}
+                      className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50"
+                    >
+                      <span>{isOtpLoading ? 'Verifying...' : 'Verify Code'}</span>
+                    </button>
+                    <button
+                      onClick={handleSendRecoveryCode}
+                      disabled={isOtpLoading}
+                      className="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition-all cursor-pointer"
+                      title="Resend OTP code to mail"
+                    >
+                      Resend
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -470,7 +526,7 @@ export const AdminPanel: React.FC = () => {
               {forgotStep === 'reset' && (
                 <div className="space-y-4">
                   <p className="text-xs text-slate-400">
-                    Code verified! Set a new password for <strong className="text-slate-200">{forgotEmail}</strong>.
+                    OTP code verified! You can now set a new password for <strong className="text-slate-200">{forgotEmail}</strong> or skip this step.
                   </p>
 
                   <div>
@@ -499,12 +555,20 @@ export const AdminPanel: React.FC = () => {
                     />
                   </div>
 
-                  <button
-                    onClick={handleResetPassword}
-                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer"
-                  >
-                    Save New Password
-                  </button>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={handleResetPassword}
+                      className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer"
+                    >
+                      Save New Password
+                    </button>
+                    <button
+                      onClick={handleSkipReset}
+                      className="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-sm transition-all cursor-pointer"
+                    >
+                      Skip
+                    </button>
+                  </div>
                 </div>
               )}
 

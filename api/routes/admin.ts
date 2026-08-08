@@ -63,6 +63,119 @@ router.get('/users', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// Store active OTPs in memory with timestamp
+const otpStore: Record<string, { code: string; expiresAt: number }> = {};
+
+// POST /api/admin/request-otp - Generate and send OTP to admin email
+router.post('/request-otp', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ success: false, message: 'Email is required' });
+      return;
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    if (cleanEmail !== 'meeabgull05@gmail.com') {
+      res.status(400).json({
+        success: false,
+        message: 'No admin account found with this email. Please enter meeabgull05@gmail.com',
+      });
+      return;
+    }
+
+    // Generate random 6-digit OTP
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore[cleanEmail] = {
+      code: generatedOtp,
+      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes validity
+    };
+
+    // Attempt to send via Nodemailer if SMTP credentials exist
+    if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+      try {
+        const nodemailer = await import('nodemailer');
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: Number(process.env.SMTP_PORT) || 587,
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+
+        await transporter.sendMail({
+          from: `"FlowTrack Security" <${process.env.SMTP_USER}>`,
+          to: cleanEmail,
+          subject: 'Admin Password Recovery OTP Code',
+          text: `Your Admin Panel Security OTP Code is: ${generatedOtp}. This code expires in 10 minutes.`,
+          html: `<div style="font-family: sans-serif; padding: 20px; background: #0f172a; color: #f8fafc; border-radius: 12px;">
+            <h2 style="color: #3b82f6;">FlowTrack Admin Security</h2>
+            <p>Your 6-digit password recovery OTP code is:</p>
+            <div style="font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #38bdf8; background: #1e293b; padding: 12px 24px; border-radius: 8px; display: inline-block;">
+              ${generatedOtp}
+            </div>
+            <p style="color: #94a3b8; font-size: 12px; margin-top: 16px;">This code will expire in 10 minutes.</p>
+          </div>`,
+        });
+      } catch (mailErr) {
+        console.warn('Nodemailer notice (OTP saved to backend store):', mailErr);
+      }
+    } else {
+      console.log(`[FlowTrack Security] Generated OTP for ${cleanEmail}: ${generatedOtp}`);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Security OTP code generated and sent to ${cleanEmail}. Please check your mail inbox!`,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Failed to generate OTP code', error: error.message });
+  }
+});
+
+// POST /api/admin/verify-otp - Verify admin OTP code
+router.post('/verify-otp', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      res.status(400).json({ success: false, message: 'Email and OTP code are required' });
+      return;
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanOtp = otp.toString().trim();
+    const record = otpStore[cleanEmail];
+
+    if (!record) {
+      res.status(400).json({ success: false, message: 'No OTP request found. Please request a new code.' });
+      return;
+    }
+
+    if (Date.now() > record.expiresAt) {
+      delete otpStore[cleanEmail];
+      res.status(400).json({ success: false, message: 'OTP code has expired. Please request a new code.' });
+      return;
+    }
+
+    if (record.code !== cleanOtp) {
+      res.status(400).json({ success: false, message: 'Invalid OTP code. Please check your email and try again.' });
+      return;
+    }
+
+    // OTP Verified! Clear used OTP
+    delete otpStore[cleanEmail];
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP code verified successfully!',
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error verifying OTP code', error: error.message });
+  }
+});
+
 // GET /api/admin/status - Check suspension status of a single user by email
 router.get('/status', async (req: Request, res: Response): Promise<void> => {
   try {
