@@ -88,19 +88,48 @@ export default function App() {
 
   // Categories & User Profile
   const [categories] = useState<Category[]>(DEFAULT_CATEGORIES);
-  const [user, setUser] = useState<UserProfile>({
-    id: 'usr_admin_001',
-    name: 'Meeab Gull (Admin)',
-    email: 'admin@apexacademy.edu',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-    role: 'School & Organization Admin',
-    isSignedIn: false, // Default to false so Login / Sign Up is the very first step
-    accountType: 'OrgAdmin',
-    orgId: 'org_apex_01',
-    orgName: 'Apex Tech & Education Academy',
-    orgType: 'School/University',
-    orgRole: 'Admin'
+  const [user, setUser] = useState<UserProfile>(() => {
+    try {
+      const savedUser = localStorage.getItem('flowtrack_logged_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed && typeof parsed === 'object' && parsed.email && parsed.isSignedIn !== false) {
+          return {
+            ...parsed,
+            isSignedIn: true
+          };
+        }
+      }
+    } catch (e) {
+      console.error('Error restoring saved user session:', e);
+    }
+    return {
+      id: 'usr_admin_001',
+      name: 'Meeab Gull (Admin)',
+      email: 'admin@apexacademy.edu',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+      role: 'School & Organization Admin',
+      isSignedIn: false, // Default to false if no saved session exists
+      accountType: 'OrgAdmin',
+      orgId: 'org_apex_01',
+      orgName: 'Apex Tech & Education Academy',
+      orgType: 'School/University',
+      orgRole: 'Admin'
+    };
   });
+
+  // Persist user login session state across browser reopens / refreshes
+  useEffect(() => {
+    try {
+      if (user.isSignedIn && user.email) {
+        localStorage.setItem('flowtrack_logged_user', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('flowtrack_logged_user');
+      }
+    } catch (e) {
+      console.error('Error saving user session state:', e);
+    }
+  }, [user]);
 
   // Organization Workspace State
   const [organization, setOrganization] = useState<Organization>({
@@ -350,6 +379,11 @@ export default function App() {
 
   // Logout Handler
   const handleLogout = () => {
+    try {
+      localStorage.removeItem('flowtrack_logged_user');
+    } catch (e) {
+      console.error(e);
+    }
     setUser((prev) => ({ ...prev, isSignedIn: false }));
     setCurrentTab('dashboard');
   };
