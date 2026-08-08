@@ -70,12 +70,15 @@ export default function App() {
       const root = document.documentElement;
       root.classList.remove('light', 'dark', 'sunset');
 
+      const isDark = themeMode === 'dark' || (themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
       if (themeMode === 'system') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        root.classList.add(prefersDark ? 'dark' : 'light');
+        root.classList.add(isDark ? 'dark' : 'light');
       } else {
         root.classList.add(themeMode);
       }
+
+      root.style.colorScheme = isDark ? 'dark' : 'light';
 
       root.setAttribute('data-density', density);
       root.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
