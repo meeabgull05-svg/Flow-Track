@@ -331,6 +331,28 @@ router.post('/send-invite', async (req: Request, res: Response): Promise<void> =
   }
 });
 
+// DELETE /api/admin/remove-member - Remove a team member by email or ID
+router.delete('/remove-member', async (req: Request, res: Response): Promise<void> => {
+  try {
+    await connectDB();
+    const { email, id } = req.body;
+    if (!email && !id) {
+      res.status(400).json({ success: false, message: 'Email or User ID is required' });
+      return;
+    }
+
+    if (id && id.match(/^[0-9a-fA-F]{24}$/)) {
+      await User.findByIdAndDelete(id);
+    } else if (email) {
+      await User.findOneAndDelete({ email: email.toLowerCase().trim() });
+    }
+
+    res.status(200).json({ success: true, message: 'Team member removed successfully' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error removing team member', error: error.message });
+  }
+});
+
 // GET /api/admin/status - Check suspension status of a single user by email
 router.get('/status', async (req: Request, res: Response): Promise<void> => {
   try {

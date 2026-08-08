@@ -15,7 +15,10 @@ import {
   Send,
   UserCheck,
   Building2,
-  Sparkles
+  Sparkles,
+  Trash2,
+  AlertTriangle,
+  UserMinus
 } from 'lucide-react';
 import { TeamMember, Organization, Task, Priority, UserProfile } from '../types';
 
@@ -24,6 +27,7 @@ interface OrganizationViewProps {
   organization: Organization;
   teamMembers: TeamMember[];
   onAddTeamMember: (member: Omit<TeamMember, 'id' | 'joinedDate'>) => void;
+  onRemoveTeamMember?: (memberId: string, memberEmail: string) => void;
   onAssignTask: (task: Omit<Task, 'id' | 'created_at' | 'updated_at' | 'time_spent_seconds'>) => void;
   tasks: Task[];
   onOpenAuthModal: () => void;
@@ -34,6 +38,7 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
   organization,
   teamMembers,
   onAddTeamMember,
+  onRemoveTeamMember,
   onAssignTask,
   tasks,
   onOpenAuthModal,
@@ -41,11 +46,15 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
   const [activeRoleFilter, setActiveRoleFilter] = useState<string>('All members');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const isAdmin = user.accountType === 'OrgAdmin' || user.orgRole === 'Admin';
+
   // Modals
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isAssignTaskOpen, setIsAssignTaskOpen] = useState(false);
   const [selectedMemberForTask, setSelectedMemberForTask] = useState<TeamMember | null>(null);
   const [selectedMemberDetail, setSelectedMemberDetail] = useState<TeamMember | null>(null);
+  const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Add Member Form
@@ -158,6 +167,24 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
     setSelectedMemberForTask(member);
     setAssignMemberId(member.id);
     setIsAssignTaskOpen(true);
+  };
+
+  const handleExecuteDeleteMember = async () => {
+    if (!memberToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      if (onRemoveTeamMember) {
+        onRemoveTeamMember(memberToDelete.id, memberToDelete.email);
+      }
+      showToast(`Removed ${memberToDelete.name} from the organization.`);
+    } catch (err) {
+      console.error('Error deleting member:', err);
+      showToast(`Failed to remove ${memberToDelete.name}.`);
+    } finally {
+      setIsDeleting(false);
+      setMemberToDelete(null);
+    }
   };
 
   // Role Filter Tabs
@@ -335,11 +362,24 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
               if (member.orgRole === 'Manager') badgeBg = 'bg-emerald-50 text-emerald-700 border-emerald-200';
               if (member.orgRole === 'Viewer') badgeBg = 'bg-amber-50 text-amber-700 border-amber-200';
 
+              const canRemove = isAdmin && (member.email ? member.email.toLowerCase() !== user.email?.toLowerCase() : true);
+
               return (
                 <div
                   key={member.id}
-                  className="bg-white border border-slate-200/90 rounded-2xl p-5 text-center flex flex-col justify-between hover:border-slate-300 transition-all shadow-2xs group"
+                  className="bg-white border border-slate-200/90 rounded-2xl p-5 text-center flex flex-col justify-between hover:border-slate-300 transition-all shadow-2xs group relative"
                 >
+                  {/* Remove Member Button (Admin only) */}
+                  {canRemove && (
+                    <button
+                      onClick={() => setMemberToDelete(member)}
+                      className="absolute top-3 right-3 p-1.5 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer opacity-80 group-hover:opacity-100"
+                      title={`Remove ${member.name}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+
                   <div>
                     {/* Circle Avatar */}
                     <div 
@@ -364,7 +404,7 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Role Badge */}
+                  {/* Role Badge & Actions */}
                   <div className="pt-1 flex items-center justify-center gap-2">
                     <span className={`inline-block px-3 py-1 rounded-md text-[11px] font-bold border ${badgeBg}`}>
                       {member.orgRole || 'Member'}
@@ -564,6 +604,53 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
                 Assign Task
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 8. Remove Member Confirmation Modal */}
+      {memberToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="p-2.5 bg-red-50 rounded-xl">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Remove Team Member?</h3>
+                <p className="text-xs text-slate-500 font-medium">Organization Workspace Admin</p>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Are you sure you want to remove <strong className="text-slate-900 font-semibold">{memberToDelete.name}</strong> (<span className="font-mono text-slate-700">{memberToDelete.email || 'No Email'}</span>) from the organization? They will lose access to team workspace tasks and reports.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setMemberToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteDeleteMember}
+                disabled={isDeleting}
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-all cursor-pointer shadow-xs flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <span>Removing...</span>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Yes, Remove Member</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

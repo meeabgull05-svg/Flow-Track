@@ -466,6 +466,23 @@ export default function App() {
       });
   };
 
+  // Remove Team Member from Organization & Database
+  const handleRemoveTeamMember = (memberId: string, memberEmail: string) => {
+    setTeamMembers((prev) => prev.filter((m) => m.id !== memberId && m.email.toLowerCase() !== memberEmail.toLowerCase()));
+    setOrganization((prev) => ({
+      ...prev,
+      memberCount: Math.max(1, prev.memberCount - 1),
+    }));
+
+    fetch('/api/admin/remove-member', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: memberId, email: memberEmail }),
+    })
+      .then(() => fetchRealTimeUsers())
+      .catch((err) => console.error('Error deleting team member:', err));
+  };
+
   // Assign Task to Team Member
   const handleAssignTask = (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at' | 'time_spent_seconds'>) => {
     const nowISO = new Date().toISOString();
@@ -663,6 +680,7 @@ export default function App() {
               organization={organization}
               teamMembers={teamMembers}
               onAddTeamMember={handleAddTeamMember}
+              onRemoveTeamMember={handleRemoveTeamMember}
               onAssignTask={handleAssignTask}
               tasks={tasks}
               onOpenAuthModal={() => setIsAuthModalOpen(true)}
