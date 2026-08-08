@@ -14,7 +14,14 @@ import {
   UserCheck,
   Lock,
   Mail,
-  AlertCircle
+  AlertCircle,
+  Ban,
+  UserX,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  LogOut
 } from 'lucide-react';
 
 interface LoggedUser {
@@ -26,6 +33,7 @@ interface LoggedUser {
   orgName?: string;
   orgType?: string;
   orgCode?: string;
+  isSuspended?: boolean;
   lastLoginAt?: string;
   createdAt?: string;
 }
@@ -38,6 +46,87 @@ export const AdminPanel: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showPass, setShowPass] = useState<Record<string, boolean>>({});
+
+  // Admin Authentication State (Default: meeabgull05@gmail.com / meerab123)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('flowtrack_admin_auth') === 'true';
+  });
+
+  const [adminPassword, setAdminPassword] = useState<string>(() => {
+    return localStorage.getItem('flowtrack_admin_pwd') || 'meerab123';
+  });
+
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPass, setLoginPass] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+
+  // Forgot Password Modal State
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotStep, setForgotStep] = useState<'email' | 'otp' | 'reset' | 'success'>('email');
+  const [otpCode, setOtpCode] = useState('');
+  const [enteredOtp, setEnteredOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [forgotError, setForgotError] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState('');
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanEmail = loginEmail.toLowerCase().trim();
+    if (cleanEmail === 'meeabgull05@gmail.com' && loginPass === adminPassword) {
+      sessionStorage.setItem('flowtrack_admin_auth', 'true');
+      setIsAuthenticated(true);
+      setLoginError('');
+    } else {
+      setLoginError('Invalid Admin Email or Password. Access denied.');
+    }
+  };
+
+  const handleAdminLogout = () => {
+    sessionStorage.removeItem('flowtrack_admin_auth');
+    setIsAuthenticated(false);
+  };
+
+  const handleSendRecoveryCode = () => {
+    const cleanEmail = forgotEmail.toLowerCase().trim();
+    if (cleanEmail !== 'meeabgull05@gmail.com') {
+      setForgotError('No admin account found with this email. Please enter meeabgull05@gmail.com');
+      return;
+    }
+    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setOtpCode(generatedCode);
+    setForgotError('');
+    setForgotSuccess('Security verification code generated successfully!');
+    setForgotStep('otp');
+  };
+
+  const handleVerifyOtp = () => {
+    if (enteredOtp.trim() === otpCode) {
+      setForgotError('');
+      setForgotSuccess('');
+      setForgotStep('reset');
+    } else {
+      setForgotError('Invalid verification code. Please check and try again.');
+    }
+  };
+
+  const handleResetPassword = () => {
+    if (!newPassword || newPassword.length < 4) {
+      setForgotError('Password must be at least 4 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setForgotError('Passwords do not match. Please verify.');
+      return;
+    }
+    setAdminPassword(newPassword);
+    localStorage.setItem('flowtrack_admin_pwd', newPassword);
+    setForgotError('');
+    setForgotSuccess('Admin password updated successfully!');
+    setForgotStep('success');
+  };
 
   const fetchUsers = async () => {
     try {
@@ -74,6 +163,30 @@ export const AdminPanel: React.FC = () => {
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         setErrorMessage(json.message || 'Failed to delete user log.');
+      }
+    } catch (err: any) {
+      setErrorMessage('Error connecting to API server.');
+    }
+  };
+
+  const handleToggleSuspend = async (id: string, currentSuspended: boolean) => {
+    const actionText = currentSuspended ? 'unsuspend and reactivate' : 'suspend';
+    if (!window.confirm(`Are you sure you want to ${actionText} this user account?`)) return;
+    try {
+      const res = await fetch(`/api/admin/users/${id}/suspend`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isSuspended: !currentSuspended }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSuccessMessage(`User account successfully ${!currentSuspended ? 'SUSPENDED' : 'REACTIVATED'}!`);
+        setUsers(users.map(u => u._id === id ? { ...u, isSuspended: !currentSuspended } : u));
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setErrorMessage(json.message || `Failed to ${actionText} user.`);
       }
     } catch (err: any) {
       setErrorMessage('Error connecting to API server.');
@@ -150,6 +263,285 @@ export const AdminPanel: React.FC = () => {
   const totalOrgs = users.filter(u => u.orgName).length;
   const adminUsers = users.filter(u => u.accountType === 'OrgAdmin').length;
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 font-sans selection:bg-[#3C83F6] selection:text-white">
+        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+          
+          {/* Subtle glow background element */}
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Admin Header */}
+          <div className="flex flex-col items-center text-center mb-8">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-500 flex items-center justify-center shadow-xl shadow-blue-500/20 mb-4 border border-blue-400/30">
+              <ShieldAlert className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+              <span>Admin Master Gate</span>
+            </h1>
+            <p className="text-xs text-slate-400 font-medium mt-1">
+              Enter authorized administrator credentials to access database logs and controls.
+            </p>
+          </div>
+
+          {/* Login Error Alert */}
+          {loginError && (
+            <div className="mb-6 p-3.5 bg-red-950/50 border border-red-500/40 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-red-300 animate-in fade-in duration-200">
+              <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                Admin Email Address
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
+                <input
+                  type="email"
+                  required
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="meeabgull05@gmail.com"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  Master Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsForgotPasswordOpen(true);
+                    setForgotEmail(loginEmail || 'meeabgull05@gmail.com');
+                    setForgotError('');
+                    setForgotSuccess('');
+                    setForgotStep('email');
+                  }}
+                  className="text-xs text-blue-400 hover:text-blue-300 font-semibold transition-colors cursor-pointer"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+              <div className="relative">
+                <Lock className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
+                <input
+                  type={showLoginPassword ? 'text' : 'password'}
+                  required
+                  value={loginPass}
+                  onChange={(e) => setLoginPass(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-10 pr-10 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300 cursor-pointer"
+                >
+                  {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 text-sm transition-all cursor-pointer mt-2 flex items-center justify-center gap-2"
+            >
+              <Key className="w-4 h-4" />
+              <span>Unlock Admin Panel</span>
+            </button>
+          </form>
+
+          <div className="mt-6 pt-6 border-t border-slate-800/80 text-center">
+            <button
+              onClick={() => window.location.href = '/'}
+              className="text-xs text-slate-400 hover:text-slate-200 font-semibold flex items-center justify-center gap-1.5 mx-auto cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Return to Main App</span>
+            </button>
+          </div>
+        </div>
+
+        {/* FORGOT PASSWORD MODAL */}
+        {isForgotPasswordOpen && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Key className="w-5 h-5 text-blue-400" />
+                  <h3 className="text-base font-bold text-white">Admin Password Recovery</h3>
+                </div>
+                <button
+                  onClick={() => setIsForgotPasswordOpen(false)}
+                  className="text-slate-500 hover:text-slate-300 text-sm font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {forgotError && (
+                <div className="mb-4 p-3 bg-red-950/50 border border-red-500/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-red-300">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                  <span>{forgotError}</span>
+                </div>
+              )}
+
+              {forgotSuccess && (
+                <div className="mb-4 p-3 bg-emerald-950/50 border border-emerald-500/40 rounded-xl flex items-center gap-2 text-xs font-semibold text-emerald-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{forgotSuccess}</span>
+                </div>
+              )}
+
+              {/* STEP 1: Email Input */}
+              {forgotStep === 'email' && (
+                <div className="space-y-4">
+                  <p className="text-xs text-slate-400">
+                    Enter the authorized admin email address (<code className="text-blue-400 font-mono">meeabgull05@gmail.com</code>) to receive a security verification code.
+                  </p>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                      Admin Email
+                    </label>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="meeabgull05@gmail.com"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleSendRecoveryCode}
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer"
+                  >
+                    Send Security Code
+                  </button>
+                </div>
+              )}
+
+              {/* STEP 2: OTP Entry */}
+              {forgotStep === 'otp' && (
+                <div className="space-y-4">
+                  <p className="text-xs text-slate-400">
+                    A 6-digit security verification code has been generated for <strong className="text-slate-200">{forgotEmail}</strong>.
+                  </p>
+
+                  <div className="p-3 bg-blue-950/40 border border-blue-500/30 rounded-xl text-center">
+                    <span className="text-[10px] uppercase font-bold text-blue-400 block mb-0.5">Demo Security OTP</span>
+                    <span className="text-xl font-mono font-black text-white tracking-widest">{otpCode}</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                      Enter 6-Digit Code
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={enteredOtp}
+                      onChange={(e) => setEnteredOtp(e.target.value)}
+                      placeholder="892105"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-center font-mono font-bold text-white tracking-widest focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleVerifyOtp}
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer"
+                  >
+                    Verify Code
+                  </button>
+                </div>
+              )}
+
+              {/* STEP 3: Reset Password */}
+              {forgotStep === 'reset' && (
+                <div className="space-y-4">
+                  <p className="text-xs text-slate-400">
+                    Code verified! Set a new password for <strong className="text-slate-200">{forgotEmail}</strong>.
+                  </p>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                      New Admin Password
+                    </label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleResetPassword}
+                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer"
+                  >
+                    Save New Password
+                  </button>
+                </div>
+              )}
+
+              {/* STEP 4: Success */}
+              {forgotStep === 'success' && (
+                <div className="space-y-4 text-center py-2">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Password Updated!</h4>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Your admin password has been updated. You can now log in using your new credentials.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setLoginEmail('meeabgull05@gmail.com');
+                      setLoginPass(adminPassword);
+                      setIsForgotPasswordOpen(false);
+                      setForgotError('');
+                      setForgotSuccess('');
+                    }}
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer"
+                  >
+                    Auto-Fill & Return to Login
+                  </button>
+                </div>
+              )}
+
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans selection:bg-[#3C83F6] selection:text-white pb-12">
       {/* Admin Navbar */}
@@ -175,6 +567,15 @@ export const AdminPanel: React.FC = () => {
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Sync</span>
+          </button>
+
+          <button
+            onClick={handleAdminLogout}
+            className="py-2 px-3 bg-red-950/60 hover:bg-red-900/60 text-red-300 border border-red-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+            title="Lock / Logout Admin Panel"
+          >
+            <LogOut className="w-3.5 h-3.5 text-red-400" />
+            <span>Lock Panel</span>
           </button>
           
           <button
@@ -313,28 +714,38 @@ export const AdminPanel: React.FC = () => {
                   <tr className="border-b border-slate-800 bg-slate-900/60 text-[10px] text-slate-400 uppercase font-black tracking-wider">
                     <th className="py-4 px-5">User Info</th>
                     <th className="py-4 px-5">Captured Password</th>
-                    <th className="py-4 px-5">Account Status / Role</th>
+                    <th className="py-4 px-5">Role & Account Status</th>
                     <th className="py-4 px-5">Organization details</th>
                     <th className="py-4 px-5">Last Activity</th>
-                    <th className="py-4 px-5 text-right">Delete</th>
+                    <th className="py-4 px-5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
                   {filteredUsers.map((user) => {
                     const id = user._id;
                     const isPassVisible = !!showPass[id];
+                    const isSuspended = !!user.isSuspended;
 
                     return (
-                      <tr key={id} className="hover:bg-slate-900/40 transition-colors">
+                      <tr key={id} className={`hover:bg-slate-900/40 transition-colors ${isSuspended ? 'bg-red-950/20' : ''}`}>
                         
                         {/* User profile */}
                         <td className="py-4 px-5">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-xs font-black text-blue-400 border border-slate-700/60">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black border ${
+                              isSuspended 
+                                ? 'bg-red-950/80 text-red-400 border-red-800/80' 
+                                : 'bg-slate-800 text-blue-400 border-slate-700/60'
+                            }`}>
                               {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
                             </div>
                             <div>
-                              <div className="text-xs font-black text-white">{user.fullName || 'No Name Provided'}</div>
+                              <div className="text-xs font-black text-white flex items-center gap-1.5">
+                                <span>{user.fullName || 'No Name Provided'}</span>
+                                {isSuspended && (
+                                  <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.2 rounded font-mono uppercase font-bold">SUSPENDED</span>
+                                )}
+                              </div>
                               <div className="text-[10px] text-slate-400 font-bold flex items-center gap-1 mt-0.5">
                                 <Mail className="w-3 h-3 text-slate-500" />
                                 <span>{user.email}</span>
@@ -361,15 +772,29 @@ export const AdminPanel: React.FC = () => {
 
                         {/* Role Status badge */}
                         <td className="py-4 px-5">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black tracking-wide border uppercase ${
-                            user.accountType === 'OrgAdmin' 
-                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                              : user.accountType === 'TeamMember'
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                          }`}>
-                            {user.accountType === 'OrgAdmin' ? 'Org Admin' : user.accountType === 'TeamMember' ? 'Team Member' : 'Individual'}
-                          </span>
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black tracking-wide border uppercase ${
+                              user.accountType === 'OrgAdmin' 
+                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                : user.accountType === 'TeamMember'
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                            }`}>
+                              {user.accountType === 'OrgAdmin' ? 'Org Admin' : user.accountType === 'TeamMember' ? 'Team Member' : 'Individual'}
+                            </span>
+
+                            {isSuspended ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-500/15 text-red-300 border border-red-500/30">
+                                <Ban className="w-3 h-3 text-red-400" />
+                                <span>Suspended</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                <span>Active</span>
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         {/* Organization */}
@@ -400,15 +825,39 @@ export const AdminPanel: React.FC = () => {
                           </div>
                         </td>
 
-                        {/* Delete button */}
+                        {/* Actions buttons */}
                         <td className="py-4 px-5 text-right">
-                          <button
-                            onClick={() => handleDeleteLog(id)}
-                            className="p-1.5 text-slate-500 hover:text-red-400 bg-transparent hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
-                            title="Remove log"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleToggleSuspend(id, isSuspended)}
+                              className={`py-1 px-2.5 rounded-lg text-[11px] font-bold border flex items-center gap-1 transition-all cursor-pointer ${
+                                isSuspended
+                                  ? 'bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-300 border-emerald-500/30'
+                                  : 'bg-red-950/40 hover:bg-red-900/40 text-red-300 border-red-500/30'
+                              }`}
+                              title={isSuspended ? 'Reactivate User Account' : 'Suspend User Account'}
+                            >
+                              {isSuspended ? (
+                                <>
+                                  <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>Unsuspend</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Ban className="w-3.5 h-3.5 text-red-400" />
+                                  <span>Suspend</span>
+                                </>
+                              )}
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteLog(id)}
+                              className="p-1.5 text-slate-500 hover:text-red-400 bg-transparent hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
+                              title="Remove log"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
 
                       </tr>

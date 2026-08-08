@@ -9,6 +9,7 @@ export interface IUser extends Document {
   orgName?: string;
   orgType?: string;
   orgCode?: string;
+  isSuspended?: boolean;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -49,6 +50,10 @@ const UserSchema = new Schema<IUser>(
     orgCode: {
       type: String,
       trim: true,
+    },
+    isSuspended: {
+      type: Boolean,
+      default: false,
     },
     lastLoginAt: {
       type: Date,

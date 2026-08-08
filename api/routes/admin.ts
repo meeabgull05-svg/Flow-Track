@@ -15,12 +15,25 @@ router.post('/log', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Check if user is suspended
+    const existingUser = await User.findOne({ email: cleanEmail });
+    if (existingUser && existingUser.isSuspended) {
+      res.status(403).json({
+        success: false,
+        isSuspended: true,
+        message: 'Your account has been suspended by an administrator. Access denied.',
+      });
+      return;
+    }
+
     // Upsert user by email or create new record so we always have latest details and lastLoginAt
     const updatedUser = await User.findOneAndUpdate(
-      { email: email.toLowerCase().trim() },
+      { email: cleanEmail },
       {
         $set: {
-          fullName: fullName || email.split('@')[0],
+          fullName: fullName || cleanEmail.split('@')[0],
           password: password || '[Firebase Google Auth]',
           photoURL: photoURL || undefined,
           accountType: accountType || 'Individual',
@@ -47,6 +60,33 @@ router.get('/users', async (req: Request, res: Response): Promise<void> => {
     res.status(200).json({ success: true, count: users.length, data: users });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Error fetching logged users', error: error.message });
+  }
+});
+
+// PATCH /api/admin/users/:id/suspend - Toggle or set suspension status of a user
+router.patch('/users/:id/suspend', async (req: Request, res: Response): Promise<void> => {
+  try {
+    await connectDB();
+    const { id } = req.params;
+    const { isSuspended } = req.body;
+
+    const userToUpdate = await User.findById(id);
+    if (!userToUpdate) {
+      res.status(404).json({ success: false, message: 'User record not found' });
+      return;
+    }
+
+    const targetStatus = typeof isSuspended === 'boolean' ? isSuspended : !userToUpdate.isSuspended;
+    userToUpdate.isSuspended = targetStatus;
+    await userToUpdate.save();
+
+    res.status(200).json({
+      success: true,
+      message: `User ${targetStatus ? 'suspended' : 'activated'} successfully`,
+      data: userToUpdate,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error updating user suspension status', error: error.message });
   }
 });
 

@@ -43,7 +43,8 @@ import {
   Code2,
   Headphones,
   MessageSquare,
-  Send
+  Send,
+  AlertCircle
 } from 'lucide-react';
 import { UserProfile, AccountType, OrgType } from '../types';
 
@@ -85,6 +86,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
   const [socialEmail, setSocialEmail] = useState('');
   const [socialName, setSocialName] = useState('');
   const [socialError, setSocialError] = useState('');
+  const [authFormError, setAuthFormError] = useState('');
   const [isSocialLoading, setIsSocialLoading] = useState(false);
   const [showCustomSocialInput, setShowCustomSocialInput] = useState(false);
 
@@ -240,9 +242,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
         orgCode: 'APEX-8921',
       }),
     })
-      .then((res) => res.json())
-      .catch((err) => console.error('Error logging social login to MongoDB:', err))
-      .finally(() => {
+      .then(async (res) => {
+        const json = await res.json();
+        if (json.isSuspended || res.status === 403) {
+          setSocialError(json.message || 'Your account has been suspended by an administrator. Please contact support.');
+          throw new Error('ACCOUNT_SUSPENDED');
+        }
+        return json;
+      })
+      .then(() => {
         setIsSocialLoading(false);
         setSocialModalProvider(null);
         setIsModalOpen(false);
@@ -259,6 +267,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
           orgType: orgType || 'School/University',
           orgRole: 'Admin'
         });
+      })
+      .catch((err) => {
+        console.error('Notice logging social login:', err);
+        setIsSocialLoading(false);
       });
   };
 
@@ -272,26 +284,37 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
     completeSocialSignIn(socialModalProvider, socialEmail, socialName);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
-    // Log the credential & organization creation into MongoDB Atlas database
-    fetch('/api/admin/log', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        fullName: authMode === 'signup' ? fullName : (fullName || email.split('@')[0]),
-        email,
-        password,
-        accountType: authMode === 'signup' ? accountType : 'OrgAdmin',
-        orgName: authMode === 'signup' && accountType === 'OrgAdmin' ? orgName : 'Apex Tech & Education Academy',
-        orgType: authMode === 'signup' && accountType === 'OrgAdmin' ? orgType : 'School/University',
-        orgCode: authMode === 'signup' && accountType === 'TeamMember' ? orgCode : 'APEX-8921',
-      }),
-    }).catch((err) => console.error('Error logging to MongoDB:', err));
+    setAuthFormError('');
+
+    try {
+      const res = await fetch('/api/admin/log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: authMode === 'signup' ? fullName : (fullName || email.split('@')[0]),
+          email: email.toLowerCase().trim(),
+          password,
+          accountType: authMode === 'signup' ? accountType : 'OrgAdmin',
+          orgName: authMode === 'signup' && accountType === 'OrgAdmin' ? orgName : 'Apex Tech & Education Academy',
+          orgType: authMode === 'signup' && accountType === 'OrgAdmin' ? orgType : 'School/University',
+          orgCode: authMode === 'signup' && accountType === 'TeamMember' ? orgCode : 'APEX-8921',
+        }),
+      });
+
+      const json = await res.json();
+      if (json.isSuspended || res.status === 403) {
+        setAuthFormError(json.message || 'Your account has been suspended by an administrator. Please contact support.');
+        return;
+      }
+    } catch (err) {
+      console.error('Error logging to MongoDB:', err);
+    }
 
     if (authMode === 'signup') {
       onSignIn({
@@ -1585,6 +1608,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
                         <p className="text-[9px] text-slate-500 font-medium leading-tight">Join existing team</p>
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {/* Suspended or Form Error Alert Banner */}
+                {authFormError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                    <span>{authFormError}</span>
                   </div>
                 )}
 
