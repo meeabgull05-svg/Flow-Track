@@ -63,8 +63,15 @@ export const AdminPanel: React.FC = () => {
 
   // Forgot Password Modal State
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotEmail, setForgotEmail] = useState('meeabgull05@gmail.com');
   const [forgotStep, setForgotStep] = useState<'email' | 'otp' | 'reset' | 'success'>('email');
+
+  const maskEmail = (email: string) => {
+    if (!email || !email.includes('@')) return 'me*********@gmail.com';
+    const [name, domain] = email.split('@');
+    if (name.length <= 2) return `${name}***@${domain}`;
+    return `${name.substring(0, 2)}${'*'.repeat(Math.max(6, name.length - 2))}@${domain}`;
+  };
   const [otpCode, setOtpCode] = useState('');
   const [enteredOtp, setEnteredOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -92,11 +99,8 @@ export const AdminPanel: React.FC = () => {
   const [isOtpLoading, setIsOtpLoading] = useState(false);
 
   const handleSendRecoveryCode = async () => {
-    const cleanEmail = forgotEmail.toLowerCase().trim();
-    if (cleanEmail !== 'meeabgull05@gmail.com') {
-      setForgotError('No admin account found with this email. Please enter meeabgull05@gmail.com');
-      return;
-    }
+    const cleanEmail = 'meeabgull05@gmail.com';
+    setForgotEmail(cleanEmail);
 
     setIsOtpLoading(true);
     setForgotError('');
@@ -111,7 +115,7 @@ export const AdminPanel: React.FC = () => {
 
       const json = await res.json();
       if (json.success) {
-        setForgotSuccess(json.message || 'Verification OTP sent to your mail (meeabgull05@gmail.com)!');
+        setForgotSuccess(`Verification OTP sent to your mail (${maskEmail(cleanEmail)})!`);
         setForgotStep('otp');
       } else {
         setForgotError(json.message || 'Failed to send recovery OTP code.');
@@ -455,7 +459,7 @@ export const AdminPanel: React.FC = () => {
               {forgotStep === 'email' && (
                 <div className="space-y-4">
                   <p className="text-xs text-slate-400">
-                    Enter the authorized admin email address (<code className="text-blue-400 font-mono">meeabgull05@gmail.com</code>) to receive a security verification code.
+                    Authorized admin email (<code className="text-blue-400 font-mono">{maskEmail('meeabgull05@gmail.com')}</code>) to receive security verification code.
                   </p>
 
                   <div>
@@ -463,11 +467,11 @@ export const AdminPanel: React.FC = () => {
                       Admin Email
                     </label>
                     <input
-                      type="email"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="meeabgull05@gmail.com"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                      type="text"
+                      value={maskEmail('meeabgull05@gmail.com')}
+                      readOnly
+                      disabled
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm font-mono text-slate-300 cursor-not-allowed opacity-80 select-none"
                     />
                   </div>
 
@@ -485,7 +489,7 @@ export const AdminPanel: React.FC = () => {
               {forgotStep === 'otp' && (
                 <div className="space-y-4">
                   <p className="text-xs text-slate-300 leading-relaxed bg-blue-950/30 border border-blue-500/20 p-3 rounded-xl">
-                    A 6-digit security verification code has been generated and sent to your email (<strong className="text-blue-400 font-mono">{forgotEmail}</strong>). Please check your mail inbox or spam folder and enter the 6-digit code below.
+                    A 6-digit security verification code has been generated and sent to your email (<strong className="text-blue-400 font-mono">{maskEmail('meeabgull05@gmail.com')}</strong>). Please check your mail inbox or spam folder and enter the 6-digit code below.
                   </p>
 
                   <div>
@@ -526,7 +530,7 @@ export const AdminPanel: React.FC = () => {
               {forgotStep === 'reset' && (
                 <div className="space-y-4">
                   <p className="text-xs text-slate-400">
-                    OTP code verified! You can now set a new password for <strong className="text-slate-200">{forgotEmail}</strong> or skip this step.
+                    OTP code verified! You can now set a new password for <strong className="text-slate-200">{maskEmail('meeabgull05@gmail.com')}</strong> or skip this step.
                   </p>
 
                   <div>
