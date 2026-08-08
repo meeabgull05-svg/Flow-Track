@@ -324,9 +324,41 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
     }
   };
 
+  // Helper functions for tracking registered user accounts
+  const getRegisteredAccounts = (): string[] => {
+    const defaults = ['meeabgull05@gmail.com', 'admin@apexacademy.edu', 'sarah.k@apexacademy.edu', 'guest@flowtrack.io'];
+    try {
+      const saved = localStorage.getItem('flowtrack_registered_users');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return Array.from(new Set([...defaults, ...parsed.map((e: string) => e.toLowerCase().trim())]));
+        }
+      }
+    } catch (e) {
+      console.error('Error loading registered accounts:', e);
+    }
+    return defaults;
+  };
+
+  const saveRegisteredAccount = (emailToSave: string) => {
+    try {
+      const clean = emailToSave.toLowerCase().trim();
+      if (!clean) return;
+      const current = getRegisteredAccounts();
+      if (!current.includes(clean)) {
+        current.push(clean);
+        localStorage.setItem('flowtrack_registered_users', JSON.stringify(current));
+      }
+    } catch (e) {
+      console.error('Error saving registered account:', e);
+    }
+  };
+
   const completeSocialSignIn = (provider: 'Google' | 'Facebook', emailToUse: string, nameToUse: string, customAvatar?: string) => {
     setIsSocialLoading(true);
     const cleanEmail = emailToUse.toLowerCase().trim();
+    saveRegisteredAccount(cleanEmail);
     const cleanName = nameToUse.trim() || cleanEmail.split('@')[0];
     const avatarUrl = customAvatar || (provider === 'Google'
       ? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}&backgroundColor=4285F4`
@@ -396,6 +428,21 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
     if (!email) return;
 
     setAuthFormError('');
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Check if account exists when trying to log in
+    if (authMode === 'login') {
+      const registeredList = getRegisteredAccounts();
+      if (!registeredList.includes(cleanEmail)) {
+        setAuthFormError('Account not found! Pehle "Create Account" par click karke account banayein. (No account registered with this email. Please create an account first!)');
+        return;
+      }
+    }
+
+    // Save newly registered email when creating an account
+    if (authMode === 'signup') {
+      saveRegisteredAccount(cleanEmail);
+    }
 
     try {
       const res = await fetch('/api/admin/log', {
@@ -405,12 +452,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
         },
         body: JSON.stringify({
           fullName: authMode === 'signup' ? fullName : (fullName || email.split('@')[0]),
-          email: email.toLowerCase().trim(),
+          email: cleanEmail,
           password,
           accountType: authMode === 'signup' ? accountType : 'OrgAdmin',
           orgName: authMode === 'signup' && accountType === 'OrgAdmin' ? orgName : 'Apex Tech & Education Academy',
           orgType: authMode === 'signup' && accountType === 'OrgAdmin' ? orgType : 'School/University',
           orgCode: authMode === 'signup' && accountType === 'TeamMember' ? orgCode : 'APEX-8921',
+          isSignup: authMode === 'signup',
         }),
       });
 
@@ -424,9 +472,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
     }
 
     if (authMode === 'signup') {
+      const displayName = fullName || cleanEmail.split('@')[0] || 'User';
+      localStorage.setItem('flowtrack_welcome_banner', JSON.stringify({
+        name: displayName,
+        email: cleanEmail,
+      }));
+
       onSignIn({
         id: `usr_${Date.now()}`,
-        name: fullName || 'Meeab Gull',
+        name: displayName,
         email: email,
         avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
         role: 'Organization Owner & Admin',
@@ -1720,9 +1774,24 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
 
                 {/* Suspended or Form Error Alert Banner */}
                 {authFormError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
-                    <span>{authFormError}</span>
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex flex-col gap-2 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                      <span>{authFormError}</span>
+                    </div>
+                    {authFormError.includes('Create Account') && authMode === 'login' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthMode('signup');
+                          setAuthFormError('');
+                        }}
+                        className="self-start ml-6 px-3 py-1 bg-[#3C83F6] hover:bg-[#2563EB] text-white font-extrabold text-[11px] rounded-lg transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                      >
+                        <Building2 className="w-3 h-3" />
+                        <span>Create Account Now</span>
+                      </button>
+                    )}
                   </div>
                 )}
 

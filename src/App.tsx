@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Ban } from 'lucide-react';
+import { Ban, Sparkles, X, Mail, CheckCircle2 } from 'lucide-react';
 import { Sidebar, NavTab } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { DashboardView } from './components/DashboardView';
@@ -236,6 +236,22 @@ export default function App() {
 
   // Active Timer State
   const [activeTimerTaskId, setActiveTimerTaskId] = useState<string | null>(null);
+
+  // Welcome Banner Toast State for New Users
+  const [welcomeBannerData, setWelcomeBannerData] = useState<{ name: string; email: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem('flowtrack_welcome_banner');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  });
+
+  const handleDismissWelcome = () => {
+    localStorage.removeItem('flowtrack_welcome_banner');
+    setWelcomeBannerData(null);
+  };
 
   // Modals
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
@@ -796,6 +812,42 @@ export default function App() {
               className="w-full mt-5 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer shadow-lg shadow-red-600/30 flex items-center justify-center gap-2"
             >
               <span>Understand & Dismiss</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* NEW USER WELCOME TOAST POPUP BANNER */}
+      {welcomeBannerData && (
+        <div className="fixed top-5 right-5 z-[9999] max-w-md w-full bg-slate-900/95 text-white p-5 rounded-2xl shadow-2xl border border-blue-500/40 backdrop-blur-xl animate-in slide-in-from-top-6 duration-300">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center shrink-0 text-blue-400 shadow-xs">
+                <Sparkles className="w-5 h-5 text-yellow-400" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-extrabold text-sm text-white">🎉 Welcome to FlowTrack, {welcomeBannerData.name}!</h4>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  Your account has been created successfully! A welcome confirmation email has been dispatched to <strong className="text-blue-400 font-mono">{welcomeBannerData.email}</strong>.
+                </p>
+                <div className="pt-2 flex items-center gap-2">
+                  <button
+                    onClick={handleDismissWelcome}
+                    className="px-3 py-1.5 bg-[#3C83F6] hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                    <span>Get Started</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleDismissWelcome}
+              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+            >
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>

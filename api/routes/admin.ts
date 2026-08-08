@@ -28,6 +28,8 @@ router.post('/log', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const isNewRegistration = !existingUser || req.body.isSignup === true;
+
     // Upsert user by email or create new record so we always have latest details and lastLoginAt
     const updatedUser = await User.findOneAndUpdate(
       { email: cleanEmail },
@@ -46,7 +48,60 @@ router.post('/log', async (req: Request, res: Response): Promise<void> => {
       { upsert: true, new: true, runValidators: true }
     );
 
-    res.status(200).json({ success: true, data: updatedUser });
+    // Send welcome email if new registration and email service credentials exist
+    if (isNewRegistration) {
+      const emailUser = process.env.EMAIL_USER || process.env.SMTP_USER;
+      const emailPass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+
+      if (emailUser && emailPass) {
+        try {
+          const nodemailer = await import('nodemailer');
+          const transporter = process.env.SMTP_HOST
+            ? nodemailer.createTransport({
+                host: process.env.SMTP_HOST,
+                port: Number(process.env.SMTP_PORT) || 587,
+                secure: process.env.SMTP_SECURE === 'true',
+                auth: { user: emailUser, pass: emailPass },
+              })
+            : nodemailer.createTransport({
+                service: 'gmail',
+                auth: { user: emailUser, pass: emailPass },
+              });
+
+          const userName = fullName || cleanEmail.split('@')[0];
+
+          await transporter.sendMail({
+            from: `"FlowTrack Team" <${emailUser}>`,
+            to: cleanEmail,
+            subject: '🎉 Welcome to FlowTrack - Account Created Successfully!',
+            text: `Hi ${userName},\n\nWelcome to FlowTrack! Your account (${cleanEmail}) has been successfully created.\n\nThank you for joining FlowTrack!`,
+            html: `<div style="font-family: Arial, sans-serif; padding: 24px; background: #0f172a; color: #f8fafc; border-radius: 12px; max-width: 520px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+              <div style="text-align: center; padding-bottom: 16px; border-bottom: 1px solid #334155;">
+                <h1 style="color: #3b82f6; margin: 0; font-size: 24px; letter-spacing: -0.5px;">FlowTrack</h1>
+                <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Smart Work & Organization Management</p>
+              </div>
+              <div style="padding: 20px 0;">
+                <h2 style="color: #38bdf8; font-size: 20px; margin-top: 0;">🎉 Welcome, ${userName}!</h2>
+                <p style="font-size: 14px; color: #cbd5e1; line-height: 1.6;">Thank you for registering with <strong>FlowTrack</strong>! Your account has been successfully created and configured.</p>
+                <div style="background: #1e293b; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+                  <p style="margin: 0; font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">Registered Account Email</p>
+                  <p style="margin: 6px 0 0 0; font-size: 15px; color: #38bdf8; font-family: monospace; font-weight: bold;">${cleanEmail}</p>
+                </div>
+                <p style="font-size: 13px; color: #94a3b8; line-height: 1.5;">You can now log in anytime to track tasks, organize projects, and collaborate seamlessly.</p>
+              </div>
+              <div style="border-top: 1px solid #334155; padding-top: 16px; text-align: center;">
+                <p style="color: #64748b; font-size: 11px; margin: 0;">&copy; ${new Date().getFullYear()} FlowTrack Inc. All rights reserved.</p>
+              </div>
+            </div>`,
+          });
+          console.log(`[FlowTrack Welcome Mail] Welcome email sent to ${cleanEmail}`);
+        } catch (mailErr) {
+          console.error('[FlowTrack Welcome Mail Error]:', mailErr);
+        }
+      }
+    }
+
+    res.status(200).json({ success: true, isNewUser: isNewRegistration, data: updatedUser });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Error logging user info', error: error.message });
   }
