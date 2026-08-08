@@ -46,6 +46,7 @@ interface SidebarProps {
   userAvatar?: string;
   userName?: string;
   onLogout?: () => void;
+  projectsCount?: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -58,12 +59,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOrgAdmin = true,
   userAvatar = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
   userName = 'Sara Ahmed',
-  onLogout
+  onLogout,
+  projectsCount = 0
 }) => {
+  const projectsBadge = projectsCount > 0 ? projectsCount.toString() : undefined;
+
   const mainNavItems = [
     { id: 'dashboard' as NavTab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'tracker' as NavTab, label: 'Timer', icon: Timer, badge: 'Live' },
-    { id: 'projects' as NavTab, label: 'Projects', icon: FolderKanban, badge: '12' },
+    { id: 'projects' as NavTab, label: 'Projects', icon: FolderKanban, badge: projectsBadge },
     { id: 'reports' as NavTab, label: 'Reports', icon: FileText },
     { id: 'organization' as NavTab, label: 'Team', icon: Building2, badge: isOrgAdmin ? 'Admin' : undefined },
   ];

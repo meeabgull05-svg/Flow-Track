@@ -473,6 +473,22 @@ export default function App() {
     );
   }
 
+  // User Projects Count Calculation for Sidebar Badge
+  const userProjectsCount = useMemo(() => {
+    if (!user?.email || !user.isSignedIn) return 0;
+    try {
+      const saved = localStorage.getItem(`flowtrack_projects_${user.email.toLowerCase().trim()}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.length;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    const uniqueProjects = new Set(tasks.map(t => t.project_name || t.category_id).filter(Boolean));
+    return uniqueProjects.size;
+  }, [user.email, user.isSignedIn, tasks]);
+
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-800 font-sans antialiased selection:bg-[#635BFF] selection:text-white flex">
       
@@ -488,6 +504,7 @@ export default function App() {
         userName={user.name}
         userAvatar={user.avatar}
         onLogout={handleLogout}
+        projectsCount={userProjectsCount}
       />
 
       {/* Main Content Area (Offset by 64px / lg:ml-64 for fixed sidebar) */}
