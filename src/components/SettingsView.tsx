@@ -113,15 +113,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       const root = document.documentElement;
       root.classList.remove('light', 'dark', 'sunset');
 
-      const isDark = themeMode === 'dark' || (themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
       if (themeMode === 'system') {
-        root.classList.add(isDark ? 'dark' : 'light');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        root.classList.add(prefersDark ? 'dark' : 'light');
       } else {
         root.classList.add(themeMode);
       }
-
-      root.style.colorScheme = isDark ? 'dark' : 'light';
     } catch (e) {
       console.error(e);
     }

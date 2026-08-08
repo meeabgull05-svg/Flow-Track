@@ -7,22 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-      (function() {
-        try {
-          var mode = localStorage.getItem('flowtrack_theme_mode') || 'light';
-          var isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          var root = document.documentElement;
-          if (isDark) {
-            root.classList.add('dark');
-            root.style.colorScheme = 'dark';
-          } else {
-            root.classList.add('light');
-            root.style.colorScheme = 'light';
-          }
-        } catch(e) {}
-      })();
-    </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js" async defer></script>
   </head>

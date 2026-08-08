@@ -70,15 +70,12 @@ export default function App() {
       const root = document.documentElement;
       root.classList.remove('light', 'dark', 'sunset');
 
-      const isDark = themeMode === 'dark' || (themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
       if (themeMode === 'system') {
-        root.classList.add(isDark ? 'dark' : 'light');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        root.classList.add(prefersDark ? 'dark' : 'light');
       } else {
         root.classList.add(themeMode);
       }
-
-      root.style.colorScheme = isDark ? 'dark' : 'light';
 
       root.setAttribute('data-density', density);
       root.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
@@ -450,6 +447,22 @@ export default function App() {
     setActiveTimerTaskId(null);
   };
 
+  // User Projects Count Calculation for Sidebar Badge
+  const userProjectsCount = useMemo(() => {
+    if (!user?.email || !user.isSignedIn) return 0;
+    try {
+      const saved = localStorage.getItem(`flowtrack_projects_${user.email.toLowerCase().trim()}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.length;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    const uniqueProjects = new Set(tasks.map(t => t.project_name || t.category_id).filter(Boolean));
+    return uniqueProjects.size;
+  }, [user?.email, user?.isSignedIn, tasks]);
+
   // Initial Application Loading Screen
   if (isLoading) {
     return <LoadingScreen onFinished={() => setIsLoading(false)} />;
@@ -475,22 +488,6 @@ export default function App() {
       />
     );
   }
-
-  // User Projects Count Calculation for Sidebar Badge
-  const userProjectsCount = useMemo(() => {
-    if (!user?.email || !user.isSignedIn) return 0;
-    try {
-      const saved = localStorage.getItem(`flowtrack_projects_${user.email.toLowerCase().trim()}`);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed.length;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    const uniqueProjects = new Set(tasks.map(t => t.project_name || t.category_id).filter(Boolean));
-    return uniqueProjects.size;
-  }, [user.email, user.isSignedIn, tasks]);
 
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-800 font-sans antialiased selection:bg-[#635BFF] selection:text-white flex">
