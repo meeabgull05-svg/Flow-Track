@@ -76,10 +76,10 @@ router.post('/request-otp', async (req: Request, res: Response): Promise<void> =
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    if (cleanEmail !== 'meeabgull05@gmail.com') {
+    if (!cleanEmail || !cleanEmail.includes('@')) {
       res.status(400).json({
         success: false,
-        message: 'No admin account found with this email. Please enter meeabgull05@gmail.com',
+        message: 'Please enter a valid email address.',
       });
       return;
     }
