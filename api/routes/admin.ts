@@ -91,39 +91,49 @@ router.post('/request-otp', async (req: Request, res: Response): Promise<void> =
       expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes validity
     };
 
-    // Attempt to send via Nodemailer if SMTP credentials exist
-    if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+    // Attempt to send via Nodemailer using EMAIL_USER & EMAIL_PASS (Gmail App Password) or SMTP credentials
+    const emailUser = process.env.EMAIL_USER || process.env.SMTP_USER;
+    const emailPass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+
+    if (emailUser && emailPass) {
       try {
         const nodemailer = await import('nodemailer');
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: Number(process.env.SMTP_PORT) || 587,
-          secure: process.env.SMTP_SECURE === 'true',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          },
-        });
+        
+        const transporter = process.env.SMTP_HOST
+          ? nodemailer.createTransport({
+              host: process.env.SMTP_HOST,
+              port: Number(process.env.SMTP_PORT) || 587,
+              secure: process.env.SMTP_SECURE === 'true',
+              auth: { user: emailUser, pass: emailPass },
+            })
+          : nodemailer.createTransport({
+              service: 'gmail',
+              auth: {
+                user: emailUser,
+                pass: emailPass,
+              },
+            });
 
         await transporter.sendMail({
-          from: `"FlowTrack Security" <${process.env.SMTP_USER}>`,
+          from: `"FlowTrack Admin Security" <${emailUser}>`,
           to: cleanEmail,
-          subject: 'Admin Password Recovery OTP Code',
+          subject: 'Admin Password Recovery OTP Code - FlowTrack',
           text: `Your Admin Panel Security OTP Code is: ${generatedOtp}. This code expires in 10 minutes.`,
-          html: `<div style="font-family: sans-serif; padding: 20px; background: #0f172a; color: #f8fafc; border-radius: 12px;">
-            <h2 style="color: #3b82f6;">FlowTrack Admin Security</h2>
-            <p>Your 6-digit password recovery OTP code is:</p>
-            <div style="font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #38bdf8; background: #1e293b; padding: 12px 24px; border-radius: 8px; display: inline-block;">
+          html: `<div style="font-family: Arial, sans-serif; padding: 24px; background: #0f172a; color: #f8fafc; border-radius: 12px; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #3b82f6; margin-top: 0;">FlowTrack Admin Security</h2>
+            <p style="font-size: 14px; color: #cbd5e1;">Your 6-digit password recovery OTP code is:</p>
+            <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #38bdf8; background: #1e293b; padding: 16px 24px; border-radius: 8px; text-align: center; margin: 16px 0;">
               ${generatedOtp}
             </div>
-            <p style="color: #94a3b8; font-size: 12px; margin-top: 16px;">This code will expire in 10 minutes.</p>
+            <p style="color: #94a3b8; font-size: 12px; margin-top: 16px;">This security code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
           </div>`,
         });
-      } catch (mailErr) {
-        console.warn('Nodemailer notice (OTP saved to backend store):', mailErr);
+        console.log(`[FlowTrack Security] OTP email successfully dispatched to ${cleanEmail}`);
+      } catch (mailErr: any) {
+        console.error('[Nodemailer Error] Failed to send OTP email:', mailErr);
       }
     } else {
-      console.log(`[FlowTrack Security] Generated OTP for ${cleanEmail}: ${generatedOtp}`);
+      console.log(`[FlowTrack Security] EMAIL_USER/EMAIL_PASS environment variables not set. Generated OTP for ${cleanEmail}: ${generatedOtp}`);
     }
 
     res.status(200).json({
