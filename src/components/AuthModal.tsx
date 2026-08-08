@@ -15,7 +15,8 @@ import {
   Briefcase,
   Sparkles,
   LogOut,
-  UserPlus
+  UserPlus,
+  AlertCircle
 } from 'lucide-react';
 import { UserProfile, AccountType, OrgType } from '../types';
 
@@ -42,12 +43,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [orgName, setOrgName] = useState(user.orgName || 'Apex Tech Academy');
   const [orgType, setOrgType] = useState<OrgType>(user.orgType || 'School/University');
   const [orgCode, setOrgCode] = useState('APEX-8921');
+  const [modalError, setModalError] = useState('');
 
   if (!isOpen) return null;
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !fullName) return;
+
+    setModalError('');
+    try {
+      const res = await fetch('/api/admin/log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName,
+          email: email.toLowerCase().trim(),
+          password,
+          accountType,
+          orgName,
+          orgType,
+          orgCode,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.isSuspended || res.status === 403) {
+        setModalError(json.message || 'Your account has been suspended by an administrator. Please contact support.');
+        return;
+      }
+    } catch (err) {
+      console.error('Error logging user in modal:', err);
+    }
 
     onUpdateUser({
       id: `usr_${Date.now()}`,
@@ -288,6 +317,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           ) : (
             <form onSubmit={handleFormSubmit} className="space-y-4">
               
+              {modalError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-xs font-semibold text-red-600 animate-in fade-in duration-200">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                  <span>{modalError}</span>
+                </div>
+              )}
+
               {/* Account Type Selector */}
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-2">

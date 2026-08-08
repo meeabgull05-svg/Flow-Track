@@ -63,6 +63,25 @@ router.get('/users', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// GET /api/admin/status - Check suspension status of a single user by email
+router.get('/status', async (req: Request, res: Response): Promise<void> => {
+  try {
+    await connectDB();
+    const email = (req.query.email as string || '').toLowerCase().trim();
+    if (!email) {
+      res.status(200).json({ success: true, isSuspended: false });
+      return;
+    }
+    const userRecord = await User.findOne({ email }).select('isSuspended');
+    res.status(200).json({
+      success: true,
+      isSuspended: !!(userRecord && userRecord.isSuspended),
+    });
+  } catch (error: any) {
+    res.status(200).json({ success: false, isSuspended: false });
+  }
+});
+
 // PATCH /api/admin/users/:id/suspend - Toggle or set suspension status of a user
 router.patch('/users/:id/suspend', async (req: Request, res: Response): Promise<void> => {
   try {

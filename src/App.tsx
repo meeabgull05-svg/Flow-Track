@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Ban } from 'lucide-react';
 import { Sidebar, NavTab } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { DashboardView } from './components/DashboardView';
@@ -208,8 +209,8 @@ export default function App() {
           memberCount: mappedMembers.length,
         }));
       }
-    } catch (err) {
-      console.error('Error fetching real-time users from MongoDB:', err);
+    } catch {
+      // Silently handle transient connection errors
     }
   }, [user.email, user.name, user.avatar, user.role, user.orgName, user.id, organization.name, organization.code]);
 
@@ -241,6 +242,41 @@ export default function App() {
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // Suspended User Alert Modal State
+  const [isSuspendedPopupOpen, setIsSuspendedPopupOpen] = useState(false);
+  const [suspendedEmail, setSuspendedEmail] = useState('');
+
+  // Real-time suspension check polling (enforces instant logout when admin suspends account)
+  useEffect(() => {
+    if (!user.isSignedIn || !user.email) return;
+
+    let isSubscribed = true;
+
+    const checkSuspensionStatus = async () => {
+      try {
+        const res = await fetch(`/api/admin/status?email=${encodeURIComponent(user.email)}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (isSubscribed && json.success && json.isSuspended) {
+          setSuspendedEmail(user.email);
+          setIsSuspendedPopupOpen(true);
+          setUser((prev) => ({ ...prev, isSignedIn: false }));
+          localStorage.removeItem('flowtrack_logged_user');
+        }
+      } catch {
+        // Silently catch transient network glitches during polling
+      }
+    };
+
+    checkSuspensionStatus();
+    const interval = setInterval(checkSuspensionStatus, 4000);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, [user.isSignedIn, user.email]);
 
   // Sync tasks state when user email changes
   useEffect(() => {
@@ -475,7 +511,34 @@ export default function App() {
 
   // Step 1 Gate: If user is not signed in, show mandatory Auth / Registration screen
   if (!user.isSignedIn) {
-    return <AuthScreen onSignIn={(newUser) => setUser(newUser)} />;
+    return (
+      <>
+        {/* REAL-TIME SUSPENDED USER ALERT POPUP MODAL */}
+        {isSuspendedPopupOpen && (
+          <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="w-full max-w-md bg-slate-900 border border-red-500/40 rounded-2xl p-6 shadow-2xl relative text-center">
+              <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center mx-auto mb-4">
+                <Ban className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-xl font-black text-white tracking-tight">Account Suspended</h3>
+              <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                Your account (<strong className="text-red-400 font-mono">{suspendedEmail}</strong>) has been <strong className="text-red-400 uppercase font-bold">suspended</strong> by an administrator.
+              </p>
+              <p className="text-xs text-slate-400 mt-2 bg-red-950/40 p-3 rounded-xl border border-red-500/20">
+                You have been logged out automatically. You will not be able to access the app or log in until an administrator reactivates your account.
+              </p>
+              <button
+                onClick={() => setIsSuspendedPopupOpen(false)}
+                className="w-full mt-5 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer shadow-lg shadow-red-600/30 flex items-center justify-center gap-2"
+              >
+                <span>Understand & Dismiss</span>
+              </button>
+            </div>
+          </div>
+        )}
+        <AuthScreen onSignIn={(newUser) => setUser(newUser)} />
+      </>
+    );
   }
 
   // If on landing page view, render full landing page
@@ -713,6 +776,30 @@ export default function App() {
         user={user}
         onUpdateUser={setUser}
       />
+
+      {/* REAL-TIME SUSPENDED USER ALERT POPUP MODAL */}
+      {isSuspendedPopupOpen && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-slate-900 border border-red-500/40 rounded-2xl p-6 shadow-2xl relative text-center">
+            <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center mx-auto mb-4">
+              <Ban className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-xl font-black text-white tracking-tight">Account Suspended</h3>
+            <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+              Your account (<strong className="text-red-400 font-mono">{suspendedEmail}</strong>) has been <strong className="text-red-400 uppercase font-bold">suspended</strong> by an administrator.
+            </p>
+            <p className="text-xs text-slate-400 mt-2 bg-red-950/40 p-3 rounded-xl border border-red-500/20">
+              You have been logged out automatically. You will not be able to access the app or log in until an administrator reactivates your account.
+            </p>
+            <button
+              onClick={() => setIsSuspendedPopupOpen(false)}
+              className="w-full mt-5 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm transition-all cursor-pointer shadow-lg shadow-red-600/30 flex items-center justify-center gap-2"
+            >
+              <span>Understand & Dismiss</span>
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
