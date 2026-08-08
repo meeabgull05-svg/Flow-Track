@@ -128,8 +128,7 @@ router.post('/request-otp', async (req: Request, res: Response): Promise<void> =
 
     res.status(200).json({
       success: true,
-      message: `Security OTP code generated and sent for ${cleanEmail}!`,
-      otp: generatedOtp,
+      message: `Security OTP code generated and sent to ${cleanEmail}. Please check your mail inbox!`,
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Failed to generate OTP code', error: error.message });
