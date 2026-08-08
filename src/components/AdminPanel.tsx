@@ -111,6 +111,9 @@ export const AdminPanel: React.FC = () => {
 
       const json = await res.json();
       if (json.success) {
+        if (json.otp) {
+          setOtpCode(json.otp);
+        }
         setForgotSuccess(json.message || 'Verification OTP sent to your mail (meeabgull05@gmail.com)!');
         setForgotStep('otp');
       } else {
@@ -485,8 +488,24 @@ export const AdminPanel: React.FC = () => {
               {forgotStep === 'otp' && (
                 <div className="space-y-4">
                   <p className="text-xs text-slate-300 leading-relaxed bg-blue-950/30 border border-blue-500/20 p-3 rounded-xl">
-                    A 6-digit security verification code has been generated and sent to your email (<strong className="text-blue-400 font-mono">{forgotEmail}</strong>). Please check your mail inbox and enter the 6-digit code below.
+                    A 6-digit security verification code has been generated in the database and sent for <strong className="text-blue-400 font-mono">{forgotEmail}</strong>.
                   </p>
+
+                  {otpCode && (
+                    <div className="p-3 bg-slate-950 border border-blue-500/40 rounded-xl flex items-center justify-between text-xs shadow-inner">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-blue-400 block tracking-wider">Database Security OTP</span>
+                        <span className="text-xl font-mono font-black text-sky-300 tracking-widest">{otpCode}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEnteredOtp(otpCode)}
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs transition-all cursor-pointer shadow"
+                      >
+                        Auto-Fill
+                      </button>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
@@ -497,7 +516,7 @@ export const AdminPanel: React.FC = () => {
                       maxLength={6}
                       value={enteredOtp}
                       onChange={(e) => setEnteredOtp(e.target.value)}
-                      placeholder="Enter code from email"
+                      placeholder="Enter 6-digit code"
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-center font-mono font-bold text-white tracking-widest focus:outline-none focus:border-blue-500"
                     />
                   </div>
