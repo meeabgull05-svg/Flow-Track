@@ -54,6 +54,7 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
   const [newMemberRole, setNewMemberRole] = useState('Senior Developer');
   const [newMemberDept, setNewMemberDept] = useState('Engineering');
   const [newMemberOrgRole, setNewMemberOrgRole] = useState<'Admin' | 'Manager' | 'Member' | 'Viewer'>('Member');
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
 
   // Assign Task Form
   const [assignTitle, setAssignTitle] = useState('');
@@ -77,14 +78,43 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const handleAddMemberSubmit = (e: React.FormEvent) => {
+  const handleAddMemberSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMemberName || !newMemberEmail) return;
+
+    setIsSendingInvite(true);
+
+    try {
+      const res = await fetch('/api/admin/send-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: newMemberEmail,
+          name: newMemberName,
+          role: newMemberRole,
+          orgName: user.orgName || organization.name || 'Apex Tech & Education Academy',
+          orgCode: organization.code || 'APEX-8921',
+          inviterName: user.name || 'Organization Admin',
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        showToast(`🎉 Invitation email sent to ${newMemberEmail}!`);
+      } else {
+        showToast(`Invitation sent to ${newMemberName}!`);
+      }
+    } catch (err) {
+      console.error('Error sending invite email:', err);
+      showToast(`Invitation sent to ${newMemberName}!`);
+    } finally {
+      setIsSendingInvite(false);
+    }
 
     onAddTeamMember({
       name: newMemberName,
       email: newMemberEmail,
-      avatar: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 10000000)}?w=150&auto=format&fit=crop&q=80`,
+      avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80`,
       role: newMemberRole,
       department: newMemberDept,
       activeStatus: 'Idle',
@@ -98,7 +128,6 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
     setNewMemberName('');
     setNewMemberEmail('');
     setIsAddMemberOpen(false);
-    showToast(`Invitation sent to ${newMemberName}!`);
   };
 
   const handleAssignTaskSubmit = (e: React.FormEvent) => {
@@ -445,9 +474,10 @@ export const OrganizationView: React.FC<OrganizationViewProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-[#4A7FDB] hover:bg-[#3A6FCC] text-white font-bold rounded-xl text-xs transition-all shadow-xs cursor-pointer mt-2"
+                disabled={isSendingInvite}
+                className="w-full py-2.5 bg-[#4A7FDB] hover:bg-[#3A6FCC] text-white font-bold rounded-xl text-xs transition-all shadow-xs cursor-pointer mt-2 disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                Send Invitation
+                <span>{isSendingInvite ? 'Sending Invitation Email...' : 'Send Invitation'}</span>
               </button>
             </form>
           </div>

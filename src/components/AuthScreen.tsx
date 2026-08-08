@@ -101,6 +101,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [isForgotLoading, setIsForgotLoading] = useState(false);
 
+  // Invitation link notice state
+  const [inviteNotice, setInviteNotice] = useState<string | null>(null);
+
   const handleOpenForgotPassword = () => {
     setForgotUserEmail(email || '');
     setForgotStep('email');
@@ -354,6 +357,34 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
       console.error('Error saving registered account:', e);
     }
   };
+
+  // Auto-detect invitation parameters from URL (e.g. ?inviteEmail=...&inviteName=...&inviteOrgCode=...)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const inviteEmail = params.get('inviteEmail') || params.get('email');
+      const inviteName = params.get('inviteName') || params.get('name');
+      const inviteOrgCode = params.get('inviteOrgCode') || params.get('orgCode');
+
+      if (inviteEmail || inviteOrgCode) {
+        setAuthMode('signup');
+        setAccountType('TeamMember');
+        if (inviteEmail) {
+          const clean = inviteEmail.toLowerCase().trim();
+          setEmail(clean);
+          saveRegisteredAccount(clean);
+        }
+        if (inviteName) setFullName(inviteName);
+        if (inviteOrgCode) setOrgCode(inviteOrgCode);
+
+        const codeToDisplay = inviteOrgCode || 'APEX-8921';
+        setInviteNotice(`🎉 You've been invited to join FlowTrack! Your details and Organization Code (${codeToDisplay}) have been automatically filled. Choose your password below to complete setup.`);
+        setIsModalOpen(true);
+      }
+    } catch (e) {
+      console.error('Error parsing invitation URL parameters:', e);
+    }
+  }, []);
 
   const completeSocialSignIn = (provider: 'Google' | 'Facebook', emailToUse: string, nameToUse: string, customAvatar?: string) => {
     setIsSocialLoading(true);
@@ -1769,6 +1800,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSignIn }) => {
                         <p className="text-[9px] text-slate-500 font-medium leading-tight">Join existing team</p>
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {/* Invitation Welcome Banner */}
+                {inviteNotice && authMode === 'signup' && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-2.5 text-xs font-semibold text-blue-700 animate-in fade-in duration-200">
+                    <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-[#3C83F6]" />
+                    <span className="leading-snug">{inviteNotice}</span>
                   </div>
                 )}
 

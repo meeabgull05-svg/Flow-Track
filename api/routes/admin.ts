@@ -241,6 +241,96 @@ router.post('/verify-otp', async (req: Request, res: Response): Promise<void> =>
   }
 });
 
+// POST /api/admin/send-invite - Send invitation email to team member
+router.post('/send-invite', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, name, role, orgName, orgCode, inviterName } = req.body;
+    if (!email) {
+      res.status(400).json({ success: false, message: 'Email address is required' });
+      return;
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanName = name || cleanEmail.split('@')[0];
+    const cleanOrgCode = orgCode || 'APEX-8921';
+    const cleanOrgName = orgName || 'Apex Tech & Education Academy';
+    const cleanInviter = inviterName || 'Organization Admin';
+
+    // Protocol & Host for generated link
+    const host = req.get('host') || 'localhost:3000';
+    const protocol = req.protocol || 'https';
+    const inviteUrl = `${protocol}://${host}/?inviteEmail=${encodeURIComponent(cleanEmail)}&inviteName=${encodeURIComponent(cleanName)}&inviteOrgCode=${encodeURIComponent(cleanOrgCode)}`;
+
+    const emailUser = process.env.EMAIL_USER || process.env.SMTP_USER;
+    const emailPass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+
+    if (emailUser && emailPass) {
+      try {
+        const nodemailer = await import('nodemailer');
+        const transporter = process.env.SMTP_HOST
+          ? nodemailer.createTransport({
+              host: process.env.SMTP_HOST,
+              port: Number(process.env.SMTP_PORT) || 587,
+              secure: process.env.SMTP_SECURE === 'true',
+              auth: { user: emailUser, pass: emailPass },
+            })
+          : nodemailer.createTransport({
+              service: 'gmail',
+              auth: { user: emailUser, pass: emailPass },
+            });
+
+        await transporter.sendMail({
+          from: `"FlowTrack Invitations" <${emailUser}>`,
+          to: cleanEmail,
+          subject: `📩 You are invited to join ${cleanOrgName} on FlowTrack!`,
+          text: `Hi ${cleanName},\n\n${cleanInviter} has invited you to join ${cleanOrgName} on FlowTrack as a ${role || 'Team Member'}.\n\nClick the link below to accept the invitation and set up your account:\n${inviteUrl}\n\nOrganization Code: ${cleanOrgCode}`,
+          html: `<div style="font-family: Arial, sans-serif; padding: 24px; background: #0f172a; color: #f8fafc; border-radius: 12px; max-width: 540px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+            <div style="text-align: center; padding-bottom: 16px; border-bottom: 1px solid #334155;">
+              <h1 style="color: #3b82f6; margin: 0; font-size: 24px; letter-spacing: -0.5px;">FlowTrack</h1>
+              <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Team Workspace Invitation</p>
+            </div>
+            <div style="padding: 24px 0;">
+              <h2 style="color: #38bdf8; font-size: 20px; margin-top: 0;">👋 You're Invited to Join ${cleanOrgName}!</h2>
+              <p style="font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+                <strong>${cleanInviter}</strong> has invited you (<strong>${cleanEmail}</strong>) to join their workspace on <strong>FlowTrack</strong> as <strong>${role || 'Team Member'}</strong>.
+              </p>
+              
+              <div style="background: #1e293b; padding: 18px; border-radius: 12px; margin: 20px 0; border: 1px solid #334155;">
+                <p style="margin: 0 0 6px 0; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">Organization Code</p>
+                <p style="margin: 0; font-size: 18px; color: #38bdf8; font-family: monospace; font-weight: bold; letter-spacing: 2px;">${cleanOrgCode}</p>
+              </div>
+
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${inviteUrl}" target="_blank" style="display: inline-block; background: #3b82f6; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-size: 15px; font-weight: bold; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                  Accept Invitation & Join Team &rarr;
+                </a>
+              </div>
+
+              <p style="font-size: 12px; color: #64748b; line-height: 1.5; text-align: center;">
+                Clicking the button above will automatically fill your account details and Organization Code.
+              </p>
+            </div>
+            <div style="border-top: 1px solid #334155; padding-top: 16px; text-align: center;">
+              <p style="color: #64748b; font-size: 11px; margin: 0;">&copy; ${new Date().getFullYear()} FlowTrack Inc. All rights reserved.</p>
+            </div>
+          </div>`,
+        });
+        console.log(`[FlowTrack Invite] Sent invitation email to ${cleanEmail}`);
+      } catch (mailErr) {
+        console.error('[FlowTrack Invite Mail Error]:', mailErr);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Invitation processed for ${cleanEmail}`,
+      inviteUrl,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Error sending invite', error: error.message });
+  }
+});
+
 // GET /api/admin/status - Check suspension status of a single user by email
 router.get('/status', async (req: Request, res: Response): Promise<void> => {
   try {

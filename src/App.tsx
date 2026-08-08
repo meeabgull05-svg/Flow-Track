@@ -17,6 +17,7 @@ import { LandingPage } from './components/LandingPage';
 import { AddTaskModal } from './components/AddTaskModal';
 import { AiInsightsModal } from './components/AiInsightsModal';
 import { AuthModal } from './components/AuthModal';
+import { NotificationsModal } from './components/NotificationsModal';
 import { AuthScreen } from './components/AuthScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { AdminPanel } from './components/AdminPanel';
@@ -258,6 +259,7 @@ export default function App() {
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   // Suspended User Alert Modal State
   const [isSuspendedPopupOpen, setIsSuspendedPopupOpen] = useState(false);
@@ -595,6 +597,7 @@ export default function App() {
           user={user}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           onOpenProfile={() => setCurrentTab('profile')}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
           onLogout={handleLogout}
           onOpenAddTask={() => {
             setTaskToEdit(null);
@@ -791,6 +794,14 @@ export default function App() {
         onClose={() => setIsAuthModalOpen(false)}
         user={user}
         onUpdateUser={setUser}
+      />
+
+      <NotificationsModal
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        onNavigateTab={(tab) => setCurrentTab(tab)}
+        userEmail={user?.email}
+        userName={user?.name}
       />
 
       {/* REAL-TIME SUSPENDED USER ALERT POPUP MODAL */}

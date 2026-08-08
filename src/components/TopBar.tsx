@@ -7,6 +7,7 @@ interface TopBarProps {
   user: UserProfile;
   onOpenAuthModal: () => void;
   onOpenProfile?: () => void;
+  onOpenNotifications?: () => void;
   onLogout?: () => void;
   onOpenAddTask: () => void;
   onOpenAiModal: () => void;
@@ -14,6 +15,7 @@ interface TopBarProps {
   activeTaskRunningTitle?: string;
   activeTaskSeconds?: number;
   onToggleActiveTimer?: () => void;
+  unreadCount?: number;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -21,6 +23,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   user,
   onOpenAuthModal,
   onOpenProfile,
+  onOpenNotifications,
   onLogout,
   onOpenAddTask,
   onOpenAiModal,
@@ -28,6 +31,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   activeTaskRunningTitle,
   activeTaskSeconds = 0,
   onToggleActiveTimer,
+  unreadCount = 3,
 }) => {
   const formatTime = (secs: number) => {
     const h = Math.floor(secs / 3600);
@@ -105,9 +109,15 @@ export const TopBar: React.FC<TopBarProps> = ({
         </button>
 
         {/* Notification Bell */}
-        <button className="relative p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors shrink-0">
+        <button 
+          onClick={onOpenNotifications}
+          className="relative p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors shrink-0 cursor-pointer"
+          title="Notifications Center"
+        >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white animate-pulse" />
+          )}
         </button>
 
         {/* Help icon */}
